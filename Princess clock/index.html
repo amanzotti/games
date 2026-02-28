@@ -418,7 +418,7 @@
 
     // ---- State ----
     const state = {
-      playerName:"Principessa",
+      playerName:"Virgi",
       level:null, mode:null,
       score:0, streak:0, qIdx:0,
       questions:[], currentQ:null,
@@ -822,7 +822,7 @@
     // START GAME
     // ============================================================
     function startGame(){
-      state.playerName=el.playerName.value.trim()||"Principessa";
+      state.playerName=el.playerName.value.trim()||"Virgi";
       try{localStorage.setItem("gcq_name",state.playerName);}catch(_){}
       state.score=0;state.streak=0;state.qIdx=0;state.wrongAttempts=0;state.results=[];
       state.questions=genTimes(state.level,TOTAL_Q);
@@ -1001,7 +1001,7 @@
         el.resultsSubtitle.textContent="Continua così, stai migliorando!";
         playSound("fanfare");
       }else{
-        el.resultsTitle.textContent=`Bravo sforzo, ${name}! 💖`;
+        el.resultsTitle.textContent=`Ottimo tentativo, ${name}! 💖`;
         el.resultsSubtitle.textContent="Non ti preoccupare, ogni volta impari qualcosa di nuovo!";
         playSound("correct");
       }
