@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Il Giardino dell'Orologio ✨</title>
+  <style>
+    :root {
+      /* Enchanted Garden palette — lavender, teal, gold, deep purple */
+      --lav-100: #f0e8ff;
+      --lav-200: #ddd0f8;
+      --lav-300: #c7b2f0;
+      --lav-500: #8b5cf6;
+      --teal-200: #b5ede0;
+      --teal-400: #2dd4a8;
+      --gold-300: #ffe38a;
+      --gold-500: #f8c94f;
+      --blush-200: #ffd4ec;
+      --ink: #2d1b4e;
+      --good: #16a368;
+      --bad: #be3b6e;
+      --card: rgba(255,255,255,0.88);
+      --shadow: 0 12px 35px rgba(60,20,100,0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0; min-height: 100vh;
+      font-family: "Trebuchet MS", "Comic Sans MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.7), transparent 22%),
+        radial-gradient(circle at 90% 12%, rgba(200,180,255,0.5), transparent 26%),
+        radial-gradient(circle at 75% 88%, rgba(45,212,168,0.25), transparent 30%),
+        linear-gradient(155deg, #e8d5ff 0%, #d4c0f8 28%, #c8e8e0 60%, #ffe7bd 100%);
+      overflow-x: hidden;
+    }
+
+    /* ---- Floating sparkles ---- */
+    .sparkles { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+    .sparkle { position: absolute; opacity: 0; animation: driftUp linear infinite; will-change: transform, opacity; }
+    @keyframes driftUp {
+      0%   { transform: translateY(15vh) scale(.8); opacity: 0; }
+      10%  { opacity: .7; }
+      80%  { opacity: .8; }
+      100% { transform: translateY(-110vh) scale(1.15); opacity: 0; }
+    }
+
+    main { position: relative; z-index: 2; min-height: 100vh; display: grid; place-items: center; padding: 18px; }
+
+    .screen {
+      width: min(920px, 96vw); background: var(--card); backdrop-filter: blur(5px);
+      border: 3px solid rgba(255,255,255,0.7); border-radius: 26px;
+      box-shadow: var(--shadow); padding: clamp(18px, 3.4vw, 34px);
+      display: none; animation: fadeIn 300ms ease-out;
+    }
+    .screen.active { display: block; }
+    @keyframes fadeIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    h1 { margin: 0; font-size: clamp(1.9rem, 4.4vw, 2.8rem); text-align: center; }
+    .subtitle { text-align: center; margin: 10px 0 22px; font-size: clamp(1rem, 2.6vw, 1.15rem); }
+
+    .welcome-grid { display: grid; gap: 16px; }
+    .row-label { font-weight: 700; display: block; margin-bottom: 7px; }
+
+    .name-input {
+      width: 100%; border: 2px solid var(--lav-200); border-radius: 12px;
+      padding: 12px 14px; font-size: 1.05rem; outline: none; background: #faf6ff; font-family: inherit;
+    }
+    .name-input:focus { border-color: var(--lav-500); box-shadow: 0 0 0 3px rgba(139,92,246,0.22); }
+
+    .option-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .opt-btn, .choice-btn, .primary-btn, .secondary-btn {
+      border: none; border-radius: 14px; cursor: pointer; font-weight: 700;
+      transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+      font-family: inherit; position: relative;
+    }
+    .opt-btn {
+      padding: 12px 18px; font-size: 1.05rem;
+      background: linear-gradient(180deg, #fff, #ece0ff); border: 2px solid var(--lav-200);
+    }
+    .opt-btn .badge { position: absolute; top: -6px; right: -6px; font-size: .85rem; }
+    .opt-btn.selected {
+      background: linear-gradient(180deg, #ddd0f8, #c7b2f0);
+      border-color: var(--lav-500); box-shadow: 0 8px 20px rgba(139,92,246,0.30); transform: translateY(-1px);
+    }
+    .opt-btn:hover, .choice-btn:hover, .primary-btn:hover, .secondary-btn:hover { transform: translateY(-2px); }
+
+    .primary-btn, .secondary-btn { padding: 12px 18px; font-size: 1rem; }
+    .primary-btn {
+      background: linear-gradient(180deg, #a78bfa, #7c3aed); color: #fff;
+      box-shadow: 0 10px 20px rgba(124,58,237,0.35);
+    }
+    .primary-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+    .secondary-btn { background: linear-gradient(180deg, #b5ede0, #88dfc9); color: #1b5e4a; }
+
+    .btn-row { margin-top: 12px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+    /* ---- Game HUD ---- */
+    .game-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .score-box, .meta-box {
+      background: #f8f0ff; border: 2px solid var(--lav-200); border-radius: 14px;
+      padding: 10px 12px; font-weight: 700; transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .score-box.pop { transform: scale(1.12); box-shadow: 0 0 18px rgba(139,92,246,0.45); }
+
+    /* ---- Star progress row ---- */
+    .progress-dots { display: flex; justify-content: center; gap: 8px; margin: 10px 0 4px; }
+    .dot {
+      width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+      font-size: .9rem; border: 2px solid #e0d0f0; background: #f4eeff; transition: all 300ms ease;
+    }
+    .dot.correct { background: linear-gradient(135deg, #b5ede0, #6ee7b7); border-color: #34d399; }
+    .dot.wrong   { background: linear-gradient(135deg, #ffd4ec, #ffa6c9); border-color: #f472b6; }
+    .dot.current { border-color: var(--lav-500); box-shadow: 0 0 8px rgba(139,92,246,0.4); transform: scale(1.15); }
+
+    /* ---- Clock ---- */
+    .clock-area { display: flex; flex-direction: column; align-items: center; margin: 12px 0; position: relative; }
+    .clock-canvas { touch-action: none; }
+
+    .question-card {
+      margin-top: 10px; text-align: center; padding: 14px 18px; border-radius: 18px;
+      background: linear-gradient(180deg, #fff, #f5eeff); border: 2px solid var(--lav-200);
+    }
+    .question-card h2 { margin: 0 0 4px; font-size: clamp(1rem, 2.6vw, 1.3rem); }
+    .question-text {
+      font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; letter-spacing: .02em; margin: 4px 0;
+    }
+
+    .feedback { min-height: 32px; text-align: center; margin-top: 8px; font-size: 1.1rem; font-weight: 800; }
+    .feedback.good { color: var(--good); }
+    .feedback.bad  { color: var(--bad); }
+
+    .choices { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+    .choice-btn {
+      padding: 14px 8px; font-size: 1.15rem;
+      background: linear-gradient(180deg, #fff, #f0e6ff); border: 2px solid var(--lav-200); min-height: 56px;
+    }
+    .choice-btn.correct { background: linear-gradient(180deg, #d1fae5, #a7f3d0); border-color: #34d399; color: #065f46; }
+    .choice-btn.wrong {
+      background: linear-gradient(180deg, #fce7f3, #fbcfe8); border-color: #f472b6; color: #9d174d;
+      animation: wobble 420ms ease;
+    }
+    @keyframes wobble {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); } 40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); } 80% { transform: translateX(4px); }
+    }
+
+    /* ---- Fairy character ---- */
+    .fairy-wrap { margin-top: 10px; display: flex; justify-content: center; align-items: end; gap: 14px; min-height: 70px; }
+    .fairy {
+      font-size: clamp(2.6rem, 8vw, 4rem); filter: drop-shadow(0 3px 2px rgba(0,0,0,.1));
+      transform-origin: center bottom; user-select: none; animation: float 2.6s ease-in-out infinite;
+    }
+    @keyframes float { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+    .fairy.dance { animation: dance 400ms ease-in-out 2; }
+    @keyframes dance {
+      0%,100% { transform: translateY(0) rotate(0); }
+      25% { transform: translateY(-8px) rotate(-8deg); }
+      50% { transform: translateY(-3px) rotate(7deg); }
+      75% { transform: translateY(-9px) rotate(-6deg); }
+    }
+
+    .streak-badge {
+      display: inline-block; background: linear-gradient(135deg, #ffe38a, #f8c94f);
+      border: 2px solid #d4a017; border-radius: 20px; padding: 2px 12px; margin-left: 8px;
+      font-size: .95rem; animation: streakPop 350ms ease;
+    }
+    @keyframes streakPop { 0% { transform: scale(.5); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+
+    .results-stars { margin: 16px 0; text-align: center; font-size: clamp(1.5rem, 4.5vw, 2.2rem); letter-spacing: .06em; }
+    .results-copy { text-align: center; font-size: 1.08rem; margin-top: 10px; }
+    .tiny-note { text-align: center; font-size: .92rem; color: #6b4f8a; margin-top: 14px; }
+
+    .set-instructions { text-align: center; font-size: 1rem; color: #6b4f8a; margin: 8px 0; }
+    .hand-toggle-row { display: flex; justify-content: center; gap: 12px; margin: 8px 0; }
+    .hand-btn {
+      border: none; border-radius: 14px; cursor: pointer; font-weight: 700;
+      padding: 10px 20px; font-size: 1rem; font-family: inherit;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+    .hand-btn.hour-active  { background: #f472b6; color: #fff; box-shadow: 0 6px 16px rgba(244,114,182,0.35); }
+    .hand-btn.minute-active { background: var(--lav-500); color: #fff; box-shadow: 0 6px 16px rgba(139,92,246,0.35); }
+    .hand-btn.inactive { background: #ece0ff; color: #999; }
+
+    .level-desc { text-align: center; font-size: .95rem; color: #7b5ea0; margin-top: 4px; font-style: italic; }
+
+    /* ---- Teaching intro overlay ---- */
+    .teach-overlay {
+      position: fixed; inset: 0; z-index: 50; display: none; place-items: center;
+      background: rgba(45,27,78,0.55); backdrop-filter: blur(4px);
+    }
+    .teach-overlay.active { display: grid; }
+    .teach-card {
+      width: min(500px, 92vw); background: var(--card); border-radius: 26px;
+      box-shadow: var(--shadow); padding: 28px; text-align: center;
+      animation: fadeIn 400ms ease-out;
+    }
+    .teach-card h2 { margin: 0 0 10px; font-size: 1.5rem; }
+    .teach-card p { font-size: 1.05rem; line-height: 1.7; margin: 8px 0; }
+    .teach-canvas { margin: 12px auto; display: block; }
+
+    .mute-btn {
+      position: fixed; top: 14px; right: 14px; z-index: 100; border: none; border-radius: 50%;
+      width: 48px; height: 48px; font-size: 1.35rem; background: var(--card);
+      box-shadow: 0 4px 14px rgba(60,20,100,0.18); cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      display: grid; place-items: center; border: 2px solid var(--lav-200);
+    }
+    .mute-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(60,20,100,0.26); }
+
+    @media (max-width: 520px) {
+      .choices { grid-template-columns: repeat(2, 1fr); }
+      .dot { width: 24px; height: 24px; font-size: .75rem; }
+    }
+  </style>
+</head>
+<body>
+  <button class="mute-btn" id="mute-btn" aria-label="Attiva suono" title="Suono">🔇</button>
+  <div class="sparkles" id="sparkles"></div>
+
+  <!-- Teaching overlay -->
+  <div class="teach-overlay" id="teach-overlay">
+    <div class="teach-card">
+      <h2 id="teach-title">Impariamo! 🌸</h2>
+      <canvas class="teach-canvas" id="teach-canvas" width="260" height="260"></canvas>
+      <p id="teach-text"></p>
+      <div class="btn-row">
+        <button class="primary-btn" id="teach-ok-btn">HO CAPITO! ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- ========== WELCOME ========== -->
+    <section class="screen active" id="welcome-screen">
+      <h1>Il Giardino dell'Orologio 🌸🕐</h1>
+      <p class="subtitle">Impara a leggere l'orologio nel giardino incantato!</p>
+      <div class="welcome-grid">
+        <div>
+          <label class="row-label" for="player-name">Il tuo nome</label>
+          <input class="name-input" id="player-name" type="text" maxlength="24" placeholder="Scrivi il tuo nome">
+        </div>
+        <div>
+          <label class="row-label">Scegli il livello</label>
+          <div class="option-buttons" id="level-buttons"></div>
+          <div class="level-desc" id="level-desc"></div>
+        </div>
+        <div>
+          <label class="row-label">Modalità di gioco</label>
+          <div class="option-buttons" id="mode-buttons"></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="primary-btn" id="start-btn" disabled>GIOCA 🌸✨</button>
+      </div>
+      <p class="tiny-note">8 domande per partita. Nessun timer — gioca tranquilla!</p>
+    </section>
+
+    <!-- ========== READ MODE ========== -->
+    <section class="screen" id="game-screen">
+      <div class="game-top">
+        <div class="score-box" id="score-label">Punteggio: 0 ⭐</div>
+        <div class="meta-box" id="progress-label">Domanda 1 / 8</div>
+      </div>
+      <div class="progress-dots" id="progress-dots"></div>
+      <div class="question-card">
+        <h2 id="level-title">Livello 1</h2>
+        <div class="question-text" id="question-text">Che ore sono? 🤔</div>
+      </div>
+      <div class="clock-area">
+        <canvas class="clock-canvas" id="clock-canvas" width="340" height="340"></canvas>
+        <canvas id="particle-canvas" width="340" height="340" style="position:absolute;top:0;pointer-events:none;"></canvas>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="choices" id="choices"></div>
+      <div class="fairy-wrap"><div class="fairy" id="fairy" aria-hidden="true">🧚‍♀️</div></div>
+      <div class="btn-row"><button class="secondary-btn" id="exit-btn">Esci 🌿</button></div>
+    </section>
+
+    <!-- ========== SET MODE ========== -->
+    <section class="screen" id="set-screen">
+      <div class="game-top">
+        <div class="score-box" id="set-score-label">Punteggio: 0 ⭐</div>
+        <div class="meta-box" id="set-progress-label">Domanda 1 / 8</div>
+      </div>
+      <div class="progress-dots" id="set-progress-dots"></div>
+      <div class="question-card">
+        <h2 id="set-level-title">Livello 1</h2>
+        <div class="question-text" id="set-question-text">Metti le lancette sulle 3:00</div>
+      </div>
+      <div class="clock-area">
+        <canvas class="clock-canvas" id="set-clock-canvas" width="340" height="340"></canvas>
+        <canvas id="set-particle-canvas" width="340" height="340" style="position:absolute;top:0;pointer-events:none;"></canvas>
+      </div>
+      <p class="set-instructions" id="set-instructions">Tocca l'orologio per spostare le lancette!</p>
+      <div class="hand-toggle-row" id="hand-toggle-row">
+        <button class="hand-btn hour-active" id="toggle-hour-btn">🩷 Ore</button>
+        <button class="hand-btn inactive" id="toggle-minute-btn">💜 Minuti</button>
+      </div>
+      <div class="feedback" id="set-feedback"></div>
+      <div class="btn-row">
+        <button class="primary-btn" id="confirm-btn">CONTROLLA ✅</button>
+        <button class="secondary-btn" id="set-exit-btn">Esci 🌿</button>
+      </div>
+      <div class="fairy-wrap"><div class="fairy" id="set-fairy" aria-hidden="true">🧚‍♀️</div></div>
+    </section>
+
+    <!-- ========== RESULTS ========== -->
+    <section class="screen" id="results-screen">
+      <h1 id="results-title">Bravissima!</h1>
+      <p class="subtitle" id="results-subtitle">Hai completato la missione.</p>
+      <div class="fairy-wrap"><div class="fairy" id="results-fairy" aria-hidden="true">🧚‍♀️</div></div>
+      <div class="results-stars" id="results-stars"></div>
+      <p class="results-copy" id="results-copy"></p>
+      <div class="btn-row">
+        <button class="primary-btn" id="play-again-btn">RIGIOCA 🔄</button>
+        <button class="secondary-btn" id="change-level-btn">Cambia Livello 🌸</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script>
+    // ============================================================
+    //  IL GIARDINO DELL'OROLOGIO — Learn to read the clock!
+    // ============================================================
+
+    const TOTAL_Q = 8;
+
+    const LEVELS = [
+      { id:1, name:"Le Ore",        desc:"Solo le ore in punto (1:00, 2:00, ...)",      emoji:"🕐" },
+      { id:2, name:"Mezz'ora",      desc:"Ore in punto e mezz'ora (3:00, 3:30, ...)",   emoji:"🕜" },
+      { id:3, name:"I Quarti",      desc:"Quarti d'ora (:00, :15, :30, :45)",           emoji:"🕞" },
+      { id:4, name:"Ogni 5 Minuti", desc:"Minuti di 5 in 5 (1:05, 2:10, 3:25, ...)",   emoji:"🕔" },
+      { id:5, name:"Ogni Minuto",   desc:"Qualsiasi minuto! (7:03, 11:47, ...)",        emoji:"🕰️" },
+    ];
+
+    const MODES = [
+      { id:"read", name:"Leggi l'Orologio 🔍" },
+      { id:"set",  name:"Metti le Lancette ✋" },
+    ];
+
+    // Teaching text per level (shown once)
+    const TEACH = [
+      { title:"Le Ore in Punto 🕐",
+        lines:[
+          "La lancetta <b style='color:#f472b6'>rosa</b> (corta) indica le <b>ORE</b>.",
+          "Quando la lancetta <b style='color:#8b5cf6'>viola</b> (lunga) è sul <b>12</b>, è un'ora in punto!",
+          "Guarda dove punta la lancetta rosa — quello è il numero dell'ora! 🌟",
+        ], demoH:3, demoM:0 },
+      { title:"Le Ore e Mezza 🕜",
+        lines:[
+          "Quando la lancetta viola è sul <b>6</b>, sono le ore e <b>mezza</b> (30 minuti).",
+          "Attenzione: la lancetta rosa si sposta un pochino tra un numero e l'altro! ⏳",
+          "Alle 3:30 la lancetta rosa è <b>a metà</b> tra il 3 e il 4.",
+        ], demoH:3, demoM:30 },
+      { title:"I Quarti d'Ora 🕞",
+        lines:[
+          "Sul <b>3</b> → e un quarto (<b>:15</b>)",
+          "Sul <b>6</b> → e mezza (<b>:30</b>)",
+          "Sul <b>9</b> → e tre quarti (<b>:45</b>)",
+        ], demoH:8, demoM:15 },
+      { title:"Ogni 5 Minuti 🕔",
+        lines:[
+          "Ogni numero sull'orologio vale <b>5 minuti</b>!",
+          "1 = 5 min, 2 = 10 min, 3 = 15 min ... 12 = 60 (= 0)",
+          "Conta di 5 in 5 partendo dal 12! 🌈",
+        ], demoH:10, demoM:25 },
+      { title:"Ogni Minuto! 🕰️",
+        lines:[
+          "Ogni piccola lineetta è <b>1 minuto</b>.",
+          "Conta le lineette dal 12 — dove punta la lancetta viola, quello è il minuto esatto! 🔎",
+          "Sei diventata un'esperta! 🏆",
+        ], demoH:7, demoM:42 },
+    ];
+
+    // ---- DOM ----
+    const $id = id => document.getElementById(id);
+    const screens = {
+      welcome: $id("welcome-screen"), game: $id("game-screen"),
+      set: $id("set-screen"), results: $id("results-screen"),
+    };
+    const el = {
+      playerName:$id("player-name"),
+      levelButtons:$id("level-buttons"), levelDesc:$id("level-desc"),
+      modeButtons:$id("mode-buttons"), startBtn:$id("start-btn"),
+      scoreLabel:$id("score-label"), progressLabel:$id("progress-label"),
+      progressDots:$id("progress-dots"),
+      levelTitle:$id("level-title"), questionText:$id("question-text"),
+      clockCanvas:$id("clock-canvas"), particleCanvas:$id("particle-canvas"),
+      feedback:$id("feedback"), choices:$id("choices"),
+      fairy:$id("fairy"), exitBtn:$id("exit-btn"),
+      setScoreLabel:$id("set-score-label"), setProgressLabel:$id("set-progress-label"),
+      setProgressDots:$id("set-progress-dots"),
+      setLevelTitle:$id("set-level-title"), setQuestionText:$id("set-question-text"),
+      setClockCanvas:$id("set-clock-canvas"), setParticleCanvas:$id("set-particle-canvas"),
+      setInstructions:$id("set-instructions"),
+      toggleHourBtn:$id("toggle-hour-btn"), toggleMinuteBtn:$id("toggle-minute-btn"),
+      handToggleRow:$id("hand-toggle-row"),
+      setFeedback:$id("set-feedback"), confirmBtn:$id("confirm-btn"),
+      setFairy:$id("set-fairy"), setExitBtn:$id("set-exit-btn"),
+      resultsTitle:$id("results-title"), resultsSubtitle:$id("results-subtitle"),
+      resultsFairy:$id("results-fairy"), resultsStars:$id("results-stars"),
+      resultsCopy:$id("results-copy"),
+      playAgainBtn:$id("play-again-btn"), changeLevelBtn:$id("change-level-btn"),
+      teachOverlay:$id("teach-overlay"), teachTitle:$id("teach-title"),
+      teachCanvas:$id("teach-canvas"), teachText:$id("teach-text"),
+      teachOkBtn:$id("teach-ok-btn"),
+      sparkles:$id("sparkles"), muteBtn:$id("mute-btn"),
+    };
+
+    // ---- State ----
+    const state = {
+      playerName:"Principessa",
+      level:null, mode:null,
+      score:0, streak:0, qIdx:0,
+      questions:[], currentQ:null,
+      choiceLocked:false,
+      results:[],
+      setH:12, setM:0, editHand:"hour", wrongAttempts:0,
+      animating:false,
+      particles:[], _particleLoop:false,
+    };
+
+    const praise = ["Bravissima! 🌟","Fantastico! ✨","Perfetto! 💖","Grande! 🌸","Meraviglioso! 🦋","Magico! 🔮"];
+    const encourage = ["Quasi! Riprova! 💪","Ci sei quasi! 🌈","Dai, prova ancora! 💖"];
+
+    // ============================================================
+    // AUDIO
+    // ============================================================
+    let audioCtx = null, soundOn = false;
+    function ensureAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    }
+    function toggleMute() {
+      soundOn = !soundOn;
+      el.muteBtn.textContent = soundOn ? "🔊" : "🔇";
+      if (soundOn) { ensureAudio(); playSound("click"); }
+    }
+    function tone(freq,dur,type="sine",vol=0.16,delay=0) {
+      if (!soundOn||!audioCtx) return;
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type=type; o.frequency.value=freq;
+      g.gain.setValueAtTime(vol, audioCtx.currentTime+delay);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+delay+dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(audioCtx.currentTime+delay); o.stop(audioCtx.currentTime+delay+dur);
+    }
+    function playSound(n) {
+      if (!soundOn) return; ensureAudio();
+      switch(n) {
+        case "click":   tone(880,.07,"sine",.10); break;
+        case "correct": tone(523,.14,"sine",.18); tone(659,.20,"sine",.18,.11); break;
+        case "wrong":   tone(280,.22,"triangle",.11); break;
+        case "tick":    tone(600,.04,"sine",.07); break;
+        case "fanfare": tone(523,.16,"sine",.15,0); tone(659,.16,"sine",.15,.13); tone(784,.16,"sine",.15,.26); tone(1047,.30,"sine",.18,.39); break;
+        case "perfect": tone(523,.12,"sine",.15,0); tone(659,.12,"sine",.15,.10); tone(784,.12,"sine",.15,.20); tone(1047,.18,"sine",.17,.30); tone(1175,.12,"sine",.13,.46); tone(1319,.36,"sine",.18,.58); break;
+      }
+    }
+    function speak(text) {
+      if (!soundOn) return;
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang="it-IT"; u.rate=0.85; u.pitch=1.1;
+        speechSynthesis.cancel(); speechSynthesis.speak(u);
+      } catch(_){}
+    }
+
+    // ============================================================
+    // SPARKLES
+    // ============================================================
+    function initSparkles() {
+      const sym = ["✨","⭐","🌟","💫","🌸","🦋","🌿","🍀"];
+      for (let i=0; i<20; i++) {
+        const s=document.createElement("span");
+        s.className="sparkle"; s.textContent=sym[i%sym.length];
+        s.style.left=Math.random()*100+"%";
+        s.style.fontSize=(13+Math.random()*18)+"px";
+        s.style.animationDuration=(13+Math.random()*18)+"s";
+        s.style.animationDelay=(Math.random()*16)+"s";
+        el.sparkles.appendChild(s);
+      }
+    }
+
+    // ============================================================
+    // CANVAS PARTICLE SYSTEM
+    // ============================================================
+    function spawnParticles(canvas, count) {
+      const cx=canvas.width/2, cy=canvas.height/2;
+      for (let i=0; i<count; i++) {
+        const a=Math.random()*Math.PI*2, sp=1.5+Math.random()*3;
+        state.particles.push({
+          canvas, x:cx, y:cy,
+          vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1,
+          life:1, decay:.012+Math.random()*.012,
+          size:3+Math.random()*5,
+          color:["#f8c94f","#a78bfa","#34d399","#f472b6","#60a5fa","#fff"][Math.floor(Math.random()*6)],
+          star:Math.random()>.5,
+        });
+      }
+      if (!state._particleLoop) { state._particleLoop=true; requestAnimationFrame(tickParticles); }
+    }
+
+    function tickParticles() {
+      const byC = new Map();
+      state.particles.forEach(p => {
+        if (!byC.has(p.canvas)) byC.set(p.canvas,[]);
+        byC.get(p.canvas).push(p);
+      });
+      byC.forEach((pts,canvas) => {
+        const ctx=canvas.getContext("2d");
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        pts.forEach(p => {
+          p.x+=p.vx; p.y+=p.vy; p.vy+=.06; p.life-=p.decay;
+          if (p.life<=0) return;
+          ctx.globalAlpha=p.life; ctx.fillStyle=p.color;
+          if (p.star) {
+            ctx.beginPath();
+            for (let i=0;i<5;i++){const a2=(i*4*Math.PI/5)-Math.PI/2; ctx[i?"lineTo":"moveTo"](p.x+Math.cos(a2)*p.size*p.life, p.y+Math.sin(a2)*p.size*p.life);}
+            ctx.closePath(); ctx.fill();
+          } else {
+            ctx.beginPath(); ctx.arc(p.x,p.y,p.size*p.life,0,Math.PI*2); ctx.fill();
+          }
+          ctx.globalAlpha=1;
+        });
+      });
+      state.particles = state.particles.filter(p=>p.life>0);
+      if (state.particles.length>0) { requestAnimationFrame(tickParticles); }
+      else { state._particleLoop=false; byC.forEach((_,c)=>c.getContext("2d").clearRect(0,0,c.width,c.height)); }
+    }
+
+    // ============================================================
+    // SCREEN & UTILITY
+    // ============================================================
+    function showScreen(name) {
+      Object.values(screens).forEach(s=>s.classList.remove("active"));
+      screens[name].classList.add("active");
+    }
+    function shuffle(a) {
+      const c=[...a]; for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]];} return c;
+    }
+
+    // ============================================================
+    // CLOCK DRAWING — Enchanted Garden Theme
+    // ============================================================
+    function drawClock(canvas, hour, minute, opts={}) {
+      const ctx=canvas.getContext("2d");
+      const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2;
+      const R=Math.min(W,H)/2-12;
+      ctx.clearRect(0,0,W,H);
+
+      // Outer glow
+      const glow=ctx.createRadialGradient(cx,cy,R*.85,cx,cy,R*1.08);
+      glow.addColorStop(0,"rgba(167,139,250,0)");
+      glow.addColorStop(1,"rgba(139,92,246,0.18)");
+      ctx.beginPath(); ctx.arc(cx,cy,R*1.06,0,Math.PI*2);
+      ctx.fillStyle=glow; ctx.fill();
+
+      // Face gradient
+      const face=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+      face.addColorStop(0,"#fefcff"); face.addColorStop(1,"#f0e8ff");
+      ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+      ctx.fillStyle=face; ctx.fill();
+      ctx.strokeStyle="#c7b2f0"; ctx.lineWidth=4; ctx.stroke();
+
+      // Inner ring
+      ctx.beginPath(); ctx.arc(cx,cy,R*.92,0,Math.PI*2);
+      ctx.strokeStyle="rgba(167,139,250,0.2)"; ctx.lineWidth=1; ctx.stroke();
+
+      // Garden flowers at 3,6,9,12
+      const flowers=["🌸","🌷","🌼","🌺"];
+      ctx.font=`${Math.round(R*.10)}px serif`;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      [3,6,9,12].forEach((n,i)=>{
+        const a=(n/12)*Math.PI*2-Math.PI/2;
+        ctx.fillText(flowers[i], cx+Math.cos(a)*R*.98, cy+Math.sin(a)*R*.98);
+      });
+
+      // Tick marks
+      for (let i=0;i<60;i++){
+        const a=(i/60)*Math.PI*2-Math.PI/2;
+        const isH=i%5===0;
+        const iR=isH?R*.82:R*.88, oR=R*.92;
+        ctx.beginPath();
+        ctx.moveTo(cx+Math.cos(a)*iR, cy+Math.sin(a)*iR);
+        ctx.lineTo(cx+Math.cos(a)*oR, cy+Math.sin(a)*oR);
+        ctx.strokeStyle=isH?"#7c3aed":"#d4c0f8"; ctx.lineWidth=isH?3:1; ctx.stroke();
+      }
+
+      // Numbers
+      ctx.font=`bold ${Math.round(R*.17)}px "Trebuchet MS", sans-serif`;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      for (let i=1;i<=12;i++){
+        const a=(i/12)*Math.PI*2-Math.PI/2;
+        ctx.fillStyle="#3b1f6e";
+        ctx.fillText(i, cx+Math.cos(a)*R*.72, cy+Math.sin(a)*R*.72);
+      }
+
+      // 5-min labels
+      if (opts.showMinuteLabels) {
+        ctx.font=`${Math.round(R*.09)}px "Trebuchet MS", sans-serif`;
+        for (let i=1;i<=12;i++){
+          const a=(i/12)*Math.PI*2-Math.PI/2;
+          ctx.fillStyle="#b09fd0";
+          ctx.fillText(i*5===60?"00":String(i*5).padStart(2,"0"), cx+Math.cos(a)*R*.57, cy+Math.sin(a)*R*.57);
+        }
+      }
+
+      // Center jewel
+      ctx.beginPath(); ctx.arc(cx,cy,8,0,Math.PI*2); ctx.fillStyle="#a78bfa"; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fillStyle="#fff"; ctx.fill();
+
+      // Hands
+      const showH=opts.showHour!==false, showM=opts.showMinute!==false;
+      const active=opts.activeHand||null;
+      const hAngle=((hour%12)/12)*Math.PI*2+(minute/60)*(Math.PI*2/12)-Math.PI/2;
+      const mAngle=(minute/60)*Math.PI*2-Math.PI/2;
+
+      // Minute hand (behind)
+      if (showM){
+        const mL=R*.72;
+        const mC=active==="minute"?"#7c3aed":(active==="hour"?"#c0b0e8":"#8b5cf6");
+        const mW=active==="minute"?5:4;
+        ctx.save(); ctx.translate(cx,cy); ctx.rotate(mAngle+Math.PI/2);
+        ctx.beginPath(); ctx.moveTo(0,16); ctx.lineTo(-mW/2,0); ctx.lineTo(0,-mL); ctx.lineTo(mW/2,0); ctx.closePath();
+        ctx.fillStyle=mC; ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-6,-mL+14); ctx.lineTo(0,-mL-2); ctx.lineTo(6,-mL+14); ctx.closePath();
+        ctx.fillStyle=mC; ctx.fill();
+        ctx.restore();
+      }
+
+      // Hour hand
+      if (showH){
+        const hL=R*.48;
+        const hC=active==="hour"?"#ec4899":(active==="minute"?"#f9a8d4":"#f472b6");
+        const hW=active==="hour"?7:6;
+        ctx.save(); ctx.translate(cx,cy); ctx.rotate(hAngle+Math.PI/2);
+        ctx.beginPath(); ctx.moveTo(0,14); ctx.lineTo(-hW/2,0); ctx.lineTo(0,-hL); ctx.lineTo(hW/2,0); ctx.closePath();
+        ctx.fillStyle=hC; ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-8,-hL+16); ctx.lineTo(0,-hL-2); ctx.lineTo(8,-hL+16); ctx.closePath();
+        ctx.fillStyle=hC; ctx.fill();
+        ctx.restore();
+      }
+
+      // Center cap
+      ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2); ctx.fillStyle="#7c3aed"; ctx.fill();
+
+      // Legend
+      if (opts.showLegend){
+        const ly=H-10;
+        ctx.font=`bold ${Math.round(R*.09)}px "Trebuchet MS", sans-serif`;
+        ctx.textAlign="center";
+        ctx.fillStyle="#f472b6"; ctx.fillText("● Ore",cx-36,ly);
+        ctx.fillStyle="#8b5cf6"; ctx.fillText("● Minuti",cx+36,ly);
+      }
+    }
+
+    // ============================================================
+    // ANIMATED HAND SWEEP — rotate from 12:00 to target
+    // ============================================================
+    function animateClock(canvas, tH, tM, opts, cb) {
+      state.animating = true;
+      const dur = 650;
+      const t0 = performance.now();
+      function easeOut(t) { return 1-(1-t)*(1-t); }
+
+      function frame(now) {
+        const t = Math.min(1, (now-t0)/dur);
+        const e = easeOut(t);
+        drawClock(canvas, 12+(tH-12)*e, tM*e, opts);
+        if (t<1) requestAnimationFrame(frame);
+        else { drawClock(canvas, tH, tM, opts); state.animating=false; if(cb)cb(); }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // ============================================================
+    // TIME HELPERS
+    // ============================================================
+    function genTimes(level, count) {
+      const set = new Set();
+      while (set.size < count) {
+        const h = Math.floor(Math.random()*12)+1;
+        let m;
+        switch(level){
+          case 1:m=0;break; case 2:m=Math.random()<.5?0:30;break;
+          case 3:m=[0,15,30,45][Math.floor(Math.random()*4)];break;
+          case 4:m=Math.floor(Math.random()*12)*5;break;
+          default:m=Math.floor(Math.random()*60);
+        }
+        set.add(`${h}:${String(m).padStart(2,"0")}`);
+      }
+      return [...set].map(t=>{const[h,m]=t.split(":").map(Number);return{hour:h,minute:m};});
+    }
+    function fmt(h,m){return `${h}:${String(m).padStart(2,"0")}`;}
+    function fmtIta(h,m){
+      if(m===0)return`Le ${h} in punto`;if(m===15)return`Le ${h} e un quarto`;
+      if(m===30)return`Le ${h} e mezza`;if(m===45)return`Le ${h} e tre quarti`;
+      return`Le ${h} e ${m}`;
+    }
+    function speakTime(h,m){speak(fmtIta(h,m));}
+
+    // ============================================================
+    // DISTRACTORS
+    // ============================================================
+    function makeDistractors(hour,minute,level){
+      const correct=fmt(hour,minute), opts=new Set([correct]);
+      const near=[hour-1,hour+1,hour-2,hour+2].map(h=>((h-1+12)%12)+1);
+      if(level===1){ near.forEach(h=>opts.add(fmt(h,0))); while(opts.size<4)opts.add(fmt(Math.floor(Math.random()*12)+1,0)); }
+      else if(level===2){ near.forEach(h=>{opts.add(fmt(h,minute));opts.add(fmt(h,minute===0?30:0));}); opts.add(fmt(hour,minute===0?30:0)); }
+      else if(level===3){ const qs=[0,15,30,45]; near.forEach(h=>qs.forEach(q=>opts.add(fmt(h,q)))); qs.forEach(q=>opts.add(fmt(hour,q))); }
+      else if(level===4){ [-10,-5,5,10].forEach(o=>opts.add(fmt(hour,((minute+o)+60)%60))); near.forEach(h=>opts.add(fmt(h,minute))); }
+      else{ [-5,-2,-1,1,2,5].forEach(o=>opts.add(fmt(hour,((minute+o)+60)%60))); near.forEach(h=>opts.add(fmt(h,minute))); }
+      const pool=[...opts].filter(t=>t!==correct);
+      return shuffle([correct,...shuffle(pool).slice(0,3)]);
+    }
+
+    // ============================================================
+    // PROGRESS DOTS
+    // ============================================================
+    function buildDots(container){
+      container.textContent="";
+      for(let i=0;i<TOTAL_Q;i++){const d=document.createElement("div");d.className="dot";d.textContent=i+1;container.appendChild(d);}
+    }
+    function updateDots(container){
+      [...container.children].forEach((d,i)=>{
+        d.className="dot";
+        if(i<state.results.length){d.classList.add(state.results[i]?"correct":"wrong");d.textContent=state.results[i]?"✓":"♥";}
+        else d.textContent=i+1;
+        if(i===state.qIdx)d.classList.add("current");
+      });
+    }
+
+    // ============================================================
+    // CONFETTI
+    // ============================================================
+    function celebrateBurst(){if(typeof confetti!=="function")return;confetti({particleCount:90,spread:72,startVelocity:46,origin:{y:.68}});}
+    function celebrateSide(){if(typeof confetti!=="function")return;confetti({particleCount:48,spread:112,angle:55,origin:{x:.12,y:.7}});confetti({particleCount:48,spread:112,angle:125,origin:{x:.88,y:.7}});}
+    function celebrateStars(){if(typeof confetti!=="function")return;confetti({particleCount:65,spread:90,startVelocity:35,scalar:1.15,shapes:["star"],colors:["#f8c94f","#a78bfa","#34d399","#f472b6"],origin:{y:.66}});}
+    const celFns=[celebrateBurst,celebrateSide,celebrateStars];
+    function celebrate(){celFns[Math.floor(Math.random()*celFns.length)]();}
+
+    // ============================================================
+    // BADGES (localStorage persistence)
+    // ============================================================
+    function getBadges(){try{return JSON.parse(localStorage.getItem("gcq_badges")||"{}");}catch(_){return {};}}
+    function saveBadge(lv,mode,stars){
+      const b=getBadges();const k=`${lv}_${mode}`;
+      if(!b[k]||b[k]<stars)b[k]=stars;
+      try{localStorage.setItem("gcq_badges",JSON.stringify(b));}catch(_){}
+    }
+    function getSeenTeach(){try{return JSON.parse(localStorage.getItem("gcq_teach")||"[]");}catch(_){return[];}}
+    function markSeenTeach(lv){
+      const s=getSeenTeach();if(!s.includes(lv)){s.push(lv);try{localStorage.setItem("gcq_teach",JSON.stringify(s));}catch(_){}}
+    }
+
+    // ============================================================
+    // WELCOME SCREEN
+    // ============================================================
+    function buildLevelBtns(){
+      const badges=getBadges();
+      LEVELS.forEach(lv=>{
+        const btn=document.createElement("button");btn.type="button";btn.className="opt-btn";
+        const rB=badges[`${lv.id}_read`]||0, sB=badges[`${lv.id}_set`]||0;
+        const best=Math.max(rB,sB);
+        const crown=best>=3?"👑":best>=2?"⭐":best>=1?"✨":"";
+        btn.innerHTML=`${lv.emoji} ${lv.name}${crown?` <span class="badge">${crown}</span>`:""}`;
+        btn.addEventListener("click",()=>selectLevel(lv.id));
+        el.levelButtons.appendChild(btn);
+      });
+    }
+    function buildModeBtns(){
+      MODES.forEach(mode=>{
+        const btn=document.createElement("button");btn.type="button";btn.className="opt-btn";
+        btn.textContent=mode.name;
+        btn.addEventListener("click",()=>selectMode(mode.id));
+        el.modeButtons.appendChild(btn);
+      });
+    }
+    function selectLevel(id){
+      state.level=id; el.levelDesc.textContent=LEVELS.find(l=>l.id===id).desc;
+      [...el.levelButtons.children].forEach((b,i)=>b.classList.toggle("selected",LEVELS[i].id===id));
+      checkStart(); playSound("click");
+    }
+    function selectMode(id){
+      state.mode=id;
+      [...el.modeButtons.children].forEach((b,i)=>b.classList.toggle("selected",MODES[i].id===id));
+      checkStart(); playSound("click");
+    }
+    function checkStart(){el.startBtn.disabled=!(state.level&&state.mode);}
+
+    // ============================================================
+    // TEACHING INTRO
+    // ============================================================
+    function showTeachIfNeeded(cb){
+      const seen=getSeenTeach();
+      if(seen.includes(state.level)){cb();return;}
+      const t=TEACH[state.level-1];
+      el.teachTitle.textContent=t.title;
+      el.teachText.innerHTML=t.lines.join("<br>");
+      drawClock(el.teachCanvas,t.demoH,t.demoM,{
+        showLegend:true, showMinuteLabels:state.level>=4,
+        showMinute:state.level>=2||t.demoM!==0,
+      });
+      el.teachOverlay.classList.add("active");
+      speak(t.lines.map(l=>l.replace(/<[^>]+>/g,"")).join(". "));
+      el.teachOkBtn.onclick=()=>{
+        el.teachOverlay.classList.remove("active");
+        markSeenTeach(state.level); playSound("click"); cb();
+      };
+    }
+
+    // ============================================================
+    // START GAME
+    // ============================================================
+    function startGame(){
+      state.playerName=el.playerName.value.trim()||"Principessa";
+      try{localStorage.setItem("gcq_name",state.playerName);}catch(_){}
+      state.score=0;state.streak=0;state.qIdx=0;state.wrongAttempts=0;state.results=[];
+      state.questions=genTimes(state.level,TOTAL_Q);
+      showTeachIfNeeded(()=>{
+        if(state.mode==="read"){showScreen("game");buildDots(el.progressDots);renderRead();}
+        else{showScreen("set");buildDots(el.setProgressDots);renderSet();}
+      });
+    }
+
+    // ============================================================
+    // READ MODE
+    // ============================================================
+    function renderRead(){
+      const q=state.questions[state.qIdx];
+      state.currentQ=q;state.choiceLocked=false;state.wrongAttempts=0;
+      const lv=LEVELS.find(l=>l.id===state.level);
+      el.levelTitle.textContent=`Livello ${lv.id} — ${lv.name}`;
+      el.questionText.textContent="Che ore sono? 🤔";
+      el.scoreLabel.textContent=`Punteggio: ${state.score} ⭐`;
+      el.progressLabel.textContent=`Domanda ${state.qIdx+1} / ${TOTAL_Q}`;
+      el.feedback.textContent="";el.feedback.className="feedback";
+      el.choices.textContent="";
+      updateDots(el.progressDots);
+
+      const cOpts={showMinuteLabels:state.level>=4, showLegend:state.level>=2, showMinute:state.level>=2||q.minute!==0};
+
+      // Animate hands sweeping to position, then show choices
+      animateClock(el.clockCanvas, q.hour, q.minute, cOpts, ()=>{
+        const options=makeDistractors(q.hour,q.minute,state.level);
+        options.forEach(opt=>{
+          const btn=document.createElement("button");btn.type="button";btn.className="choice-btn";
+          btn.textContent=opt;
+          btn.addEventListener("click",()=>handleRead(opt,btn));
+          el.choices.appendChild(btn);
+        });
+        setTimeout(()=>speak("Che ore sono?"),200);
+      });
+    }
+
+    function handleRead(val,btn){
+      if(state.choiceLocked||state.animating)return;
+      const q=state.currentQ, correct=fmt(q.hour,q.minute);
+      if(val===correct){
+        state.choiceLocked=true; btn.classList.add("correct");
+        state.score++;state.streak++;state.results.push(true);
+        updateDots(el.progressDots);
+        const msg=praise[Math.floor(Math.random()*praise.length)];
+        let sk=state.streak>=3?` <span class="streak-badge">🔥 Serie di ${state.streak}!</span>`:"";
+        el.feedback.innerHTML=`<span class="good">${msg}</span>${sk}`;
+        el.feedback.className="feedback good";
+        playSound("correct");
+        el.scoreLabel.classList.add("pop"); setTimeout(()=>el.scoreLabel.classList.remove("pop"),250);
+        el.fairy.classList.remove("dance"); void el.fairy.offsetWidth; el.fairy.classList.add("dance");
+        celebrate(); spawnParticles(el.particleCanvas,30); speakTime(q.hour,q.minute);
+        setTimeout(()=>{state.qIdx++;state.qIdx>=TOTAL_Q?finishRound():renderRead();},1600);
+      } else {
+        btn.classList.add("wrong");btn.disabled=true;state.streak=0;state.wrongAttempts++;
+        playSound("wrong");
+        el.feedback.textContent=state.wrongAttempts>=2
+          ?"Suggerimento: 🩷 = ore (corta), 💜 = minuti (lunga)"
+          :encourage[Math.floor(Math.random()*encourage.length)];
+        el.feedback.className="feedback bad";
+        if(state.wrongAttempts>=2)speakTime(q.hour,q.minute);
+      }
+    }
+
+    // ============================================================
+    // SET MODE
+    // ============================================================
+    function renderSet(){
+      const q=state.questions[state.qIdx];
+      state.currentQ=q;state.wrongAttempts=0;
+      state.setH=12;state.setM=0;state.editHand="hour";
+      updateToggle();
+      const lv=LEVELS.find(l=>l.id===state.level);
+      el.setLevelTitle.textContent=`Livello ${lv.id} — ${lv.name}`;
+      el.setQuestionText.textContent=`Metti le lancette sulle ${fmt(q.hour,q.minute)}`;
+      el.setScoreLabel.textContent=`Punteggio: ${state.score} ⭐`;
+      el.setProgressLabel.textContent=`Domanda ${state.qIdx+1} / ${TOTAL_Q}`;
+      el.setFeedback.textContent="";el.setFeedback.className="feedback";
+      updateDots(el.setProgressDots);
+      if(state.level===1){el.handToggleRow.style.display="none";el.setInstructions.textContent="Tocca l'orologio per spostare la lancetta delle ore!";state.editHand="hour";}
+      else{el.handToggleRow.style.display="flex";el.setInstructions.textContent="Scegli quale lancetta muovere, poi tocca l'orologio!";}
+      drawSetClock();
+      setTimeout(()=>speak(`Metti le lancette sulle ${fmtIta(q.hour,q.minute)}`),300);
+    }
+
+    function drawSetClock(){
+      drawClock(el.setClockCanvas,state.setH,state.setM,{
+        showMinuteLabels:state.level>=4,showLegend:true,
+        activeHand:state.editHand,showMinute:state.level>=2,
+      });
+    }
+    function updateToggle(){
+      el.toggleHourBtn.className="hand-btn "+(state.editHand==="hour"?"hour-active":"inactive");
+      el.toggleMinuteBtn.className="hand-btn "+(state.editHand==="minute"?"minute-active":"inactive");
+    }
+
+    function handleClockClick(e){
+      if(state.animating)return;
+      const canvas=el.setClockCanvas,rect=canvas.getBoundingClientRect();
+      const sx=canvas.width/rect.width,sy=canvas.height/rect.height;
+      const x=(e.clientX-rect.left)*sx-canvas.width/2;
+      const y=(e.clientY-rect.top)*sy-canvas.height/2;
+      let a=Math.atan2(x,-y);if(a<0)a+=Math.PI*2;
+
+      if(state.editHand==="hour"||state.level===1){
+        let h=Math.round((a/(Math.PI*2))*12);if(h===0)h=12;state.setH=h;
+      } else {
+        let raw=(a/(Math.PI*2))*60;
+        if(state.level===2)raw=raw<15||raw>=45?0:30;
+        else if(state.level===3){raw=[0,15,30,45].reduce((b,q)=>{const d1=Math.min(Math.abs(raw-q),60-Math.abs(raw-q));const d2=Math.min(Math.abs(raw-b),60-Math.abs(raw-b));return d1<d2?q:b;},0);}
+        else if(state.level===4){raw=Math.round(raw/5)*5;if(raw===60)raw=0;}
+        else{raw=Math.round(raw)%60;}
+        state.setM=raw;
+      }
+      playSound("tick");drawSetClock();
+    }
+
+    function handleTouch(e){e.preventDefault();if(e.touches.length>0)handleClockClick({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY});}
+
+    function checkSet(){
+      if(state.animating)return;
+      const q=state.currentQ;
+      const hOK=state.setH===q.hour, mOK=state.level===1?true:state.setM===q.minute;
+      if(hOK&&mOK){
+        state.score++;state.streak++;state.results.push(true);
+        updateDots(el.setProgressDots);
+        const msg=praise[Math.floor(Math.random()*praise.length)];
+        let sk=state.streak>=3?` <span class="streak-badge">🔥 Serie di ${state.streak}!</span>`:"";
+        el.setFeedback.innerHTML=`<span class="good">${msg}</span>${sk}`;
+        el.setFeedback.className="feedback good";
+        playSound("correct");
+        el.setScoreLabel.classList.add("pop");setTimeout(()=>el.setScoreLabel.classList.remove("pop"),250);
+        el.setFairy.classList.remove("dance");void el.setFairy.offsetWidth;el.setFairy.classList.add("dance");
+        celebrate(); spawnParticles(el.setParticleCanvas,30); speakTime(q.hour,q.minute);
+        setTimeout(()=>{state.qIdx++;state.qIdx>=TOTAL_Q?finishRound():renderSet();},1800);
+      } else {
+        state.streak=0;state.wrongAttempts++;playSound("wrong");
+        let hint;
+        if(!hOK&&!mOK)hint="Sia l'ora che i minuti sono sbagliati. Riprova!";
+        else if(!hOK)hint="I minuti sono giusti! Ma l'ora no — guarda la lancetta rosa 🩷";
+        else hint="L'ora è giusta! Ma i minuti no — guarda la lancetta viola 💜";
+        el.setFeedback.textContent=state.wrongAttempts>=2?`${hint} Risposta: ${fmt(q.hour,q.minute)}`:hint;
+        el.setFeedback.className="feedback bad";
+        if(state.wrongAttempts>=3){
+          state.results.push(false);updateDots(el.setProgressDots);
+          state.setH=q.hour;state.setM=q.minute;drawSetClock();
+          el.setFeedback.textContent=`Ecco: ${fmt(q.hour,q.minute)}! Guarda bene! 👀`;
+          speak(fmtIta(q.hour,q.minute));
+          setTimeout(()=>{state.qIdx++;state.qIdx>=TOTAL_Q?finishRound():renderSet();},2500);
+        }
+      }
+    }
+
+    // ============================================================
+    // RESULTS
+    // ============================================================
+    function finishRound(){
+      while(state.results.length<state.qIdx)state.results.push(false);
+      showScreen("results");
+      const pct=state.score/TOTAL_Q;
+      const stars=pct>=1?3:pct>=.7?2:pct>=.4?1:0;
+      saveBadge(state.level,state.mode,stars);
+      const name=state.playerName;
+      if(pct>=1){
+        el.resultsTitle.textContent=`Perfetto, ${name}! 🏆`;
+        el.resultsSubtitle.textContent="Hai indovinato tutto! Sei un genio dell'orologio!";
+        playSound("perfect");setTimeout(()=>{celebrate();setTimeout(celebrate,400);},200);
+      }else if(pct>=.7){
+        el.resultsTitle.textContent=`Bravissima, ${name}! 🌟`;
+        el.resultsSubtitle.textContent="Quasi perfetto! Stai imparando benissimo!";
+        playSound("fanfare");setTimeout(celebrate,200);
+      }else if(pct>=.4){
+        el.resultsTitle.textContent=`Brava, ${name}! 💪`;
+        el.resultsSubtitle.textContent="Continua così, stai migliorando!";
+        playSound("fanfare");
+      }else{
+        el.resultsTitle.textContent=`Bravo sforzo, ${name}! 💖`;
+        el.resultsSubtitle.textContent="Non ti preoccupare, ogni volta impari qualcosa di nuovo!";
+        playSound("correct");
+      }
+      el.resultsStars.textContent="⭐".repeat(stars)+"☆".repeat(3-stars);
+      el.resultsCopy.textContent=`${state.score} su ${TOTAL_Q} risposte corrette!`;
+      speak(pct>=.7?"Bravissima! Grande!":"Brava! Continua così!");
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    function init(){
+      initSparkles();
+      buildLevelBtns(); buildModeBtns();
+      try{el.playerName.value=localStorage.getItem("gcq_name")||"";}catch(_){}
+      selectLevel(1);selectMode("read");
+
+      el.muteBtn.addEventListener("click",toggleMute);
+      el.startBtn.addEventListener("click",()=>{playSound("click");startGame();});
+      el.exitBtn.addEventListener("click",finishRound);
+      el.setExitBtn.addEventListener("click",finishRound);
+      el.playAgainBtn.addEventListener("click",()=>{playSound("click");startGame();});
+      el.changeLevelBtn.addEventListener("click",()=>{
+        playSound("click");showScreen("welcome");
+        el.levelButtons.textContent="";buildLevelBtns();selectLevel(state.level);
+      });
+      el.setClockCanvas.addEventListener("click",handleClockClick);
+      el.setClockCanvas.addEventListener("touchstart",handleTouch,{passive:false});
+      el.toggleHourBtn.addEventListener("click",()=>{state.editHand="hour";updateToggle();drawSetClock();playSound("click");});
+      el.toggleMinuteBtn.addEventListener("click",()=>{state.editHand="minute";updateToggle();drawSetClock();playSound("click");});
+      el.confirmBtn.addEventListener("click",()=>{playSound("click");checkSet();});
+    }
+
+    init();
+  </script>
+</body>
+</html>
