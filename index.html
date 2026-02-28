@@ -1,0 +1,1151 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Princess Math Quest</title>
+  <style>
+    :root {
+      --rose-100: #ffeaf6;
+      --rose-200: #ffd4ec;
+      --rose-300: #ffb8df;
+      --rose-500: #ff6eb2;
+      --peach-200: #ffe3cf;
+      --gold-400: #f8c94f;
+      --mint-300: #b8f3d2;
+      --sky-300: #b8ddff;
+      --ink: #472143;
+      --good: #1f9d6a;
+      --bad: #cc406b;
+      --card: rgba(255, 255, 255, 0.88);
+      --shadow: 0 12px 35px rgba(111, 34, 89, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Comic Sans MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.75), transparent 20%),
+        radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.45), transparent 24%),
+        radial-gradient(circle at 80% 92%, rgba(255, 201, 79, 0.35), transparent 28%),
+        linear-gradient(160deg, #ffd8ee 0%, #ffcde7 34%, #ffd9c7 72%, #ffe7bd 100%);
+      overflow-x: hidden;
+    }
+
+    .sparkles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .sparkle {
+      position: absolute;
+      opacity: 0;
+      animation: driftUp linear infinite;
+      will-change: transform, opacity;
+    }
+
+    @keyframes driftUp {
+      0% {
+        transform: translateY(15vh) scale(0.8);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.75;
+      }
+      80% {
+        opacity: 0.85;
+      }
+      100% {
+        transform: translateY(-110vh) scale(1.15);
+        opacity: 0;
+      }
+    }
+
+    main {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .screen {
+      width: min(920px, 96vw);
+      background: var(--card);
+      backdrop-filter: blur(5px);
+      border: 3px solid rgba(255, 255, 255, 0.7);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 3.4vw, 34px);
+      display: none;
+      animation: fadeIn 300ms ease-out;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        transform: translateY(8px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.9rem, 4.4vw, 2.8rem);
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      margin: 10px 0 22px;
+      font-size: clamp(1rem, 2.8vw, 1.2rem);
+    }
+
+    .welcome-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .name-row label,
+    .table-row label {
+      font-weight: 700;
+      display: block;
+      margin-bottom: 7px;
+    }
+
+    .name-row input {
+      width: 100%;
+      border: 2px solid #ffc7de;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 1.05rem;
+      outline: none;
+      background: #fff8fd;
+    }
+
+    .name-row input:focus {
+      border-color: var(--rose-500);
+      box-shadow: 0 0 0 3px rgba(255, 110, 178, 0.22);
+    }
+
+    .table-buttons {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(52px, 1fr));
+      gap: 10px;
+    }
+
+    .table-btn,
+    .choice-btn,
+    .primary-btn,
+    .secondary-btn {
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+      font-family: inherit;
+    }
+
+    .table-btn {
+      padding: 12px 0;
+      font-size: 1.05rem;
+      background: linear-gradient(180deg, #fff, #ffe7f5);
+      border: 2px solid #ffd1e8;
+    }
+
+    .table-btn.selected {
+      background: linear-gradient(180deg, #ffd7ef, #ffc0e5);
+      border-color: #ff89c4;
+      box-shadow: 0 8px 20px rgba(255, 127, 189, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .table-btn:hover,
+    .choice-btn:hover,
+    .primary-btn:hover,
+    .secondary-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      padding: 12px 18px;
+      font-size: 1rem;
+    }
+
+    .primary-btn {
+      background: linear-gradient(180deg, #ff8bc6, #ff5fae);
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(255, 95, 174, 0.35);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .secondary-btn {
+      background: linear-gradient(180deg, #d2efff, #b5defc);
+      color: #1d4f72;
+    }
+
+    .btn-row {
+      margin-top: 8px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .game-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .score-box,
+    .meta-box {
+      background: #fff7fd;
+      border: 2px solid #ffd7eb;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 700;
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+
+    .score-box.pop {
+      transform: scale(1.12);
+      box-shadow: 0 0 18px rgba(255, 110, 178, 0.45);
+    }
+
+    .meta-box {
+      text-align: right;
+    }
+
+    .timer-wrap {
+      margin-top: 12px;
+      background: #f6dbe8;
+      border-radius: 999px;
+      overflow: hidden;
+      height: 18px;
+      border: 2px solid #f0c4da;
+    }
+
+    .timer-bar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #7cd6ac, #ffd169, #ff8f9e);
+      transition: width 0.1s linear;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      text-align: center;
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fff, #fff2fb);
+      border: 2px solid #ffd9ee;
+    }
+
+    .question-card h2 {
+      margin: 0 0 8px;
+      font-size: clamp(1.2rem, 3vw, 1.55rem);
+    }
+
+    .question-text {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      margin: 6px 0;
+    }
+
+    .question-text.slide-in {
+      animation: slideIn 320ms ease-out;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-14px) scale(0.92); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .feedback {
+      min-height: 34px;
+      text-align: center;
+      margin-top: 12px;
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+
+    .streak-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #fff3b0, #ffd76a);
+      border: 2px solid #f0b830;
+      border-radius: 20px;
+      padding: 2px 12px;
+      margin-left: 8px;
+      font-size: 0.95rem;
+      animation: streakPop 350ms ease;
+    }
+
+    @keyframes streakPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .feedback.good {
+      color: var(--good);
+    }
+
+    .feedback.bad {
+      color: var(--bad);
+    }
+
+    .choices {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(76px, 1fr));
+      gap: 10px;
+    }
+
+    .choice-btn {
+      padding: 15px 8px;
+      font-size: 1.15rem;
+      background: linear-gradient(180deg, #ffffff, #ffecf8);
+      border: 2px solid #ffd6ea;
+      min-height: 62px;
+    }
+
+    .choice-btn.correct {
+      background: linear-gradient(180deg, #d9ffe7, #baf7d2);
+      border-color: #65cc9a;
+      color: #186a47;
+    }
+
+    .choice-btn.wrong {
+      background: linear-gradient(180deg, #ffd9e6, #ffc6d9);
+      border-color: #ff7da8;
+      color: #8c2349;
+      animation: wobble 420ms ease;
+    }
+
+    @keyframes wobble {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    .princess-wrap {
+      margin-top: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: end;
+      gap: 14px;
+      min-height: 100px;
+    }
+
+    .princess {
+      font-size: clamp(2.6rem, 8vw, 4rem);
+      filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.1));
+      transform-origin: center bottom;
+      user-select: none;
+      animation: idleBounce 2.2s ease-in-out infinite;
+    }
+
+    @keyframes idleBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .princess.dance {
+      animation: dance 400ms ease-in-out 2;
+    }
+
+    .princess.crowned::after {
+      content: "👑";
+      position: absolute;
+      transform: translate(-5px, -40px);
+      font-size: 1.8rem;
+      animation: crownDrop 500ms ease;
+    }
+
+    @keyframes dance {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-6px) rotate(-7deg); }
+      50% { transform: translateY(-2px) rotate(6deg); }
+      75% { transform: translateY(-7px) rotate(-5deg); }
+    }
+
+    @keyframes crownDrop {
+      0% { transform: translate(-5px, -75px); opacity: 0; }
+      100% { transform: translate(-5px, -40px); opacity: 1; }
+    }
+
+    .results-stars {
+      margin: 16px 0;
+      text-align: center;
+      font-size: clamp(1.5rem, 4.5vw, 2.2rem);
+      letter-spacing: 0.06em;
+    }
+
+    .results-copy {
+      text-align: center;
+      font-size: 1.08rem;
+      margin-top: 10px;
+    }
+
+    .tiny-note {
+      text-align: center;
+      font-size: 0.92rem;
+      color: #7a4a6f;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 820px) {
+      .table-buttons {
+        grid-template-columns: repeat(4, minmax(50px, 1fr));
+      }
+
+      .choices {
+        grid-template-columns: repeat(3, minmax(70px, 1fr));
+      }
+
+      .game-top {
+        grid-template-columns: 1fr;
+      }
+
+      .meta-box {
+        text-align: left;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .choices {
+        grid-template-columns: repeat(2, minmax(80px, 1fr));
+      }
+    }
+
+    .mute-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 100;
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      font-size: 1.35rem;
+      background: var(--card);
+      box-shadow: 0 4px 14px rgba(111, 34, 89, 0.18);
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      display: grid;
+      place-items: center;
+      border: 2px solid #ffd7eb;
+    }
+
+    .mute-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 20px rgba(111, 34, 89, 0.26);
+    }
+  </style>
+</head>
+<body>
+  <button class="mute-btn" id="mute-btn" aria-label="Attiva suono" title="Suono">🔇</button>
+  <div class="sparkles" id="sparkles"></div>
+
+  <main>
+    <section class="screen active" id="welcome-screen" aria-label="Benvenuto">
+      <h1>Princess Math Quest ✨👑</h1>
+      <p class="subtitle">Esercitati con le tabelline tra stelle, magia e corone!</p>
+
+      <div class="welcome-grid">
+        <div class="name-row">
+          <label for="player-name">Il tuo nome</label>
+          <input id="player-name" type="text" maxlength="24" placeholder="Scrivi il tuo nome">
+        </div>
+
+        <div class="table-row">
+          <label>Scegli una tabellina</label>
+          <div class="table-buttons" id="table-buttons"></div>
+        </div>
+
+        <div class="table-row">
+          <label>Tempo per ogni domanda</label>
+          <div class="table-buttons" id="timer-buttons"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="primary-btn" id="start-btn" disabled>GIOCA ✨</button>
+      </div>
+      <p class="tiny-note" id="round-note">10 domande, 4 risposte, 5 secondi per domanda.</p>
+    </section>
+
+    <section class="screen" id="game-screen" aria-label="Gioco">
+      <div class="game-top">
+        <div class="score-box" id="score-label">Punteggio: 0 ⭐</div>
+        <div class="meta-box" id="progress-label">Domanda 1 / 10</div>
+      </div>
+
+      <div class="timer-wrap" aria-label="Tempo">
+        <div class="timer-bar" id="timer-bar"></div>
+      </div>
+
+      <div class="question-card">
+        <h2 id="table-title">Tabellina del 5</h2>
+        <div class="question-text" id="question-text">5 × 1 = ?</div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+      <div class="choices" id="choices"></div>
+
+      <div class="princess-wrap">
+        <div class="princess" id="princess" aria-hidden="true">👸</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="secondary-btn" id="exit-btn">Esci ✋</button>
+      </div>
+    </section>
+
+    <section class="screen" id="results-screen" aria-label="Risultati">
+      <h1 id="results-title">Bravissima!</h1>
+      <p class="subtitle" id="results-subtitle">Hai completato la missione.</p>
+      <div class="princess-wrap">
+        <div class="princess" id="results-princess" aria-hidden="true">👸</div>
+      </div>
+      <div class="results-stars" id="results-stars"></div>
+      <p class="results-copy" id="results-copy"></p>
+
+      <div class="btn-row">
+        <button class="primary-btn" id="play-again-btn">RIGIOCA 🔄</button>
+        <button class="secondary-btn" id="change-table-btn">Cambia Tabellina 📖</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script>
+    const TOTAL_QUESTIONS = 10;
+    const TIMER_OPTIONS = [3, 5, 7, 10, 15];
+    const DEFAULT_TIMER = 5;
+
+    const screens = {
+      welcome: document.getElementById("welcome-screen"),
+      game: document.getElementById("game-screen"),
+      results: document.getElementById("results-screen")
+    };
+
+    const elements = {
+      playerName: document.getElementById("player-name"),
+      tableButtons: document.getElementById("table-buttons"),
+      timerButtons: document.getElementById("timer-buttons"),
+      roundNote: document.getElementById("round-note"),
+      startBtn: document.getElementById("start-btn"),
+      exitBtn: document.getElementById("exit-btn"),
+      scoreLabel: document.getElementById("score-label"),
+      progressLabel: document.getElementById("progress-label"),
+      tableTitle: document.getElementById("table-title"),
+      questionText: document.getElementById("question-text"),
+      feedback: document.getElementById("feedback"),
+      choices: document.getElementById("choices"),
+      timerBar: document.getElementById("timer-bar"),
+      princess: document.getElementById("princess"),
+      resultsPrincess: document.getElementById("results-princess"),
+      resultsTitle: document.getElementById("results-title"),
+      resultsSubtitle: document.getElementById("results-subtitle"),
+      resultsStars: document.getElementById("results-stars"),
+      resultsCopy: document.getElementById("results-copy"),
+      playAgainBtn: document.getElementById("play-again-btn"),
+      changeTableBtn: document.getElementById("change-table-btn"),
+      sparkles: document.getElementById("sparkles"),
+      muteBtn: document.getElementById("mute-btn")
+    };
+
+    const state = {
+      playerName: "Principessa",
+      selectedTable: null,
+      selectedTimer: DEFAULT_TIMER,
+      score: 0,
+      streak: 0,
+      questionIndex: 0,
+      questions: [],
+      currentQuestion: null,
+      timerHandle: null,
+      choiceLocked: false,
+      secondsLeft: DEFAULT_TIMER
+    };
+
+    const praiseTexts = ["Bravissima!", "Fantastico!", "Che stella! ⭐", "Perfetto!", "Grande! 🌟", "Magico! ✨"];
+
+    // --------------- Audio engine (Web Audio API) ---------------
+    // All sounds are generated with oscillators — zero external files.
+    // Sound is OFF by default (browser autoplay policy + parent control).
+    let audioCtx = null;
+    let soundEnabled = false;
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleMute() {
+      soundEnabled = !soundEnabled;
+      elements.muteBtn.textContent = soundEnabled ? "🔊" : "🔇";
+      elements.muteBtn.setAttribute("aria-label", soundEnabled ? "Disattiva suono" : "Attiva suono");
+      if (soundEnabled) {
+        ensureAudioContext();
+        playSound("click");
+      }
+    }
+
+    function playTone(freq, duration, type = "sine", volume = 0.18, delay = 0) {
+      if (!soundEnabled || !audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(volume, audioCtx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + delay);
+      osc.stop(audioCtx.currentTime + delay + duration);
+    }
+
+    function playSound(name) {
+      if (!soundEnabled) return;
+      ensureAudioContext();
+
+      switch (name) {
+        case "click":
+          // Soft pop — short high-pitched blip
+          playTone(880, 0.08, "sine", 0.10);
+          break;
+
+        case "correct":
+          // Bright ascending two-note chime (do → mi)
+          playTone(523, 0.15, "sine", 0.18, 0);      // C5
+          playTone(659, 0.22, "sine", 0.18, 0.12);    // E5
+          break;
+
+        case "wrong":
+          // Gentle single low tone — informative, not harsh
+          playTone(280, 0.25, "triangle", 0.12);
+          break;
+
+        case "timeout":
+          // Soft descending two-note nudge
+          playTone(440, 0.14, "triangle", 0.10, 0);    // A4
+          playTone(350, 0.20, "triangle", 0.10, 0.12); // ~F4
+          break;
+
+        case "fanfare":
+          // Celebratory ascending arpeggio (C→E→G→C)
+          playTone(523, 0.18, "sine", 0.16, 0);        // C5
+          playTone(659, 0.18, "sine", 0.16, 0.14);     // E5
+          playTone(784, 0.18, "sine", 0.16, 0.28);     // G5
+          playTone(1047, 0.35, "sine", 0.20, 0.42);    // C6 (held longer)
+          break;
+
+        case "perfect":
+          // Extended sparkle fanfare — two arpeggios
+          playTone(523, 0.14, "sine", 0.16, 0);        // C5
+          playTone(659, 0.14, "sine", 0.16, 0.11);     // E5
+          playTone(784, 0.14, "sine", 0.16, 0.22);     // G5
+          playTone(1047, 0.20, "sine", 0.18, 0.33);    // C6
+          playTone(1175, 0.14, "sine", 0.14, 0.50);    // D6
+          playTone(1319, 0.40, "sine", 0.20, 0.62);    // E6 (sparkle finish)
+          break;
+      }
+    }
+
+    function showScreen(name) {
+      Object.values(screens).forEach((screen) => screen.classList.remove("active"));
+      screens[name].classList.add("active");
+    }
+
+    function shuffle(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function buildTableButtons() {
+      for (let table = 2; table <= 12; table += 1) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "table-btn";
+        button.textContent = table;
+        button.setAttribute("aria-label", `Tabellina del ${table}`);
+        button.addEventListener("click", () => selectTable(table));
+        elements.tableButtons.appendChild(button);
+      }
+    }
+
+    function buildTimerButtons() {
+      TIMER_OPTIONS.forEach((seconds) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "table-btn";
+        button.textContent = `${seconds}s`;
+        button.setAttribute("aria-label", `${seconds} secondi`);
+        if (seconds === DEFAULT_TIMER) button.classList.add("selected");
+        button.addEventListener("click", () => selectTimer(seconds));
+        elements.timerButtons.appendChild(button);
+      });
+    }
+
+    function selectTimer(seconds) {
+      state.selectedTimer = seconds;
+      [...elements.timerButtons.children].forEach((btn) => {
+        btn.classList.toggle("selected", btn.textContent === `${seconds}s`);
+      });
+      updateRoundNote();
+    }
+
+    function updateRoundNote() {
+      elements.roundNote.textContent = `10 domande, 4 risposte, ${state.selectedTimer} secondi per domanda.`;
+    }
+
+    function selectTable(table) {
+      state.selectedTable = table;
+      [...elements.tableButtons.children].forEach((btn) => {
+        btn.classList.toggle("selected", Number(btn.textContent) === table);
+      });
+      elements.startBtn.disabled = false;
+    }
+
+    function startGame() {
+      state.playerName = elements.playerName.value.trim() || "Principessa";
+      try { localStorage.setItem("pmq_name", state.playerName); } catch (_) {}
+      state.score = 0;
+      state.streak = 0;
+      state.questionIndex = 0;
+      state.choiceLocked = false;
+      state.questions = shuffle(Array.from({ length: TOTAL_QUESTIONS }, (_, i) => i + 1));
+      elements.princess.classList.remove("crowned");
+      elements.resultsPrincess.classList.remove("crowned");
+      showScreen("game");
+      renderQuestion();
+    }
+
+    function exitGame() {
+      clearTimer();
+      finishRound();
+    }
+
+    function setFeedback(message, type = "") {
+      elements.feedback.textContent = message;
+      elements.feedback.className = "feedback";
+      if (type) {
+        elements.feedback.classList.add(type);
+      }
+    }
+
+    function makeDistractors(table, multiplier, answer) {
+      const candidates = new Set();
+
+      // Nearby facts from the same table.
+      if (multiplier > 1) candidates.add(table * (multiplier - 1));
+      if (multiplier < 12) candidates.add(table * (multiplier + 1));
+
+      // Off-by-one arithmetic slips.
+      candidates.add(answer - 1);
+      candidates.add(answer + 1);
+      candidates.add(answer - table);
+      candidates.add(answer + table);
+
+      // Related table confusion (same multiplier, neighbor table).
+      if (table > 2) candidates.add((table - 1) * multiplier);
+      if (table < 12) candidates.add((table + 1) * multiplier);
+
+      // Expand with random plausible values in range if needed.
+      while (candidates.size < 10) {
+        const randomValue = Math.max(2, answer + Math.floor(Math.random() * 21) - 10);
+        candidates.add(randomValue);
+      }
+
+      const cleaned = [...candidates].filter((value) => value > 0 && value !== answer);
+      return shuffle(cleaned).slice(0, 3);
+    }
+
+    function createOptions(table, multiplier) {
+      const answer = table * multiplier;
+      const distractors = makeDistractors(table, multiplier, answer);
+      const options = shuffle([answer, ...distractors]);
+      return { answer, options };
+    }
+
+    function updateHud() {
+      elements.scoreLabel.textContent = `Punteggio: ${state.score} ⭐`;
+      elements.progressLabel.textContent = `Domanda ${state.questionIndex + 1} / ${TOTAL_QUESTIONS}`;
+      elements.tableTitle.textContent = `Tabellina del ${state.selectedTable}`;
+    }
+
+    function clearTimer() {
+      if (state.timerHandle) {
+        clearInterval(state.timerHandle);
+        state.timerHandle = null;
+      }
+    }
+
+    function startTimer() {
+      clearTimer();
+      const duration = state.selectedTimer;
+      state.secondsLeft = duration;
+      elements.timerBar.style.width = "100%";
+
+      const started = performance.now();
+      state.timerHandle = setInterval(() => {
+        const elapsed = (performance.now() - started) / 1000;
+        const left = Math.max(0, duration - elapsed);
+        state.secondsLeft = left;
+        const pct = (left / duration) * 100;
+        elements.timerBar.style.width = `${pct}%`;
+        // Shift bar color to red when below 30%
+        if (pct < 30) {
+          elements.timerBar.style.background = "linear-gradient(90deg, #ff6b6b, #ff8f9e)";
+        } else {
+          elements.timerBar.style.background = "";
+        }
+
+        if (left <= 0) {
+          clearTimer();
+          handleAnswer(null, true);
+        }
+      }, 60);
+    }
+
+    function renderChoices(options, answer) {
+      elements.choices.textContent = "";
+      options.forEach((value) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "choice-btn";
+        button.textContent = value;
+        button.addEventListener("click", () => handleAnswer(value, false, button));
+        elements.choices.appendChild(button);
+      });
+      state.currentQuestion.answer = answer;
+    }
+
+    function lockChoices() {
+      state.choiceLocked = true;
+      [...elements.choices.children].forEach((button) => {
+        button.disabled = true;
+      });
+    }
+
+    function unlockChoices() {
+      state.choiceLocked = false;
+      [...elements.choices.children].forEach((button) => {
+        button.disabled = false;
+      });
+    }
+
+    function runCelebrationConfettiBurst() {
+      confetti({
+        particleCount: 90,
+        spread: 72,
+        startVelocity: 46,
+        origin: { y: 0.68 }
+      });
+    }
+
+    function runCelebrationSideCannons() {
+      confetti({
+        particleCount: 48,
+        spread: 112,
+        angle: 55,
+        origin: { x: 0.12, y: 0.7 }
+      });
+      confetti({
+        particleCount: 48,
+        spread: 112,
+        angle: 125,
+        origin: { x: 0.88, y: 0.7 }
+      });
+    }
+
+    function runCelebrationStarShower() {
+      const stars = ["#ffd76a", "#fff3b0", "#ffe38a", "#ff72b6"];
+      confetti({
+        particleCount: 65,
+        spread: 90,
+        startVelocity: 35,
+        scalar: 1.15,
+        shapes: ["star"],
+        colors: stars,
+        origin: { y: 0.66 }
+      });
+    }
+
+    function runCelebrationStreamerRain() {
+      const colors = ["#ff72b6", "#ffd76a", "#7de0b1", "#84c7ff"];
+      confetti({
+        particleCount: 70,
+        spread: 52,
+        ticks: 160,
+        gravity: 0.62,
+        colors,
+        origin: { x: 0.5, y: 0.35 }
+      });
+    }
+
+    function runCelebrationMiniFireworks() {
+      const colors = ["#ff72b6", "#ffd76a", "#7de0b1", "#84c7ff", "#ffffff"];
+      confetti({
+        particleCount: 26,
+        spread: 80,
+        startVelocity: 34,
+        colors,
+        origin: { x: 0.25, y: 0.66 }
+      });
+      confetti({
+        particleCount: 26,
+        spread: 80,
+        startVelocity: 34,
+        colors,
+        origin: { x: 0.75, y: 0.66 }
+      });
+    }
+
+    function celebrateCorrect() {
+      const message = praiseTexts[Math.floor(Math.random() * praiseTexts.length)];
+      state.streak += 1;
+      let streakText = "";
+      if (state.streak >= 3) {
+        streakText = ` <span class="streak-badge">🔥 Serie di ${state.streak}!</span>`;
+      }
+      elements.feedback.innerHTML = `<span class="good">${message} +1 ⭐</span>${streakText}`;
+      elements.feedback.className = "feedback good";
+      playSound("correct");
+
+      // Pop the score box briefly
+      elements.scoreLabel.classList.add("pop");
+      setTimeout(() => elements.scoreLabel.classList.remove("pop"), 250);
+
+      elements.princess.classList.remove("dance");
+      void elements.princess.offsetWidth;
+      elements.princess.classList.add("dance");
+
+      if (typeof confetti === "function") {
+        const effects = [
+          runCelebrationConfettiBurst,
+          runCelebrationSideCannons,
+          runCelebrationStarShower,
+          runCelebrationStreamerRain,
+          runCelebrationMiniFireworks
+        ];
+        const effect = effects[Math.floor(Math.random() * effects.length)];
+        effect();
+      }
+    }
+
+    function markCorrectAnswer(answer) {
+      [...elements.choices.children].forEach((button) => {
+        if (Number(button.textContent) === answer) {
+          button.classList.add("correct");
+        }
+      });
+    }
+
+    function handleAnswer(value, timedOut, clickedButton = null) {
+      if (state.choiceLocked) {
+        return;
+      }
+
+      clearTimer();
+      lockChoices();
+
+      const answer = state.currentQuestion.answer;
+      const isCorrect = value === answer;
+
+      if (isCorrect) {
+        state.score += 1;
+        celebrateCorrect();
+      } else {
+        markCorrectAnswer(answer);
+        if (clickedButton) {
+          clickedButton.classList.add("wrong");
+        }
+        state.streak = 0;
+        if (timedOut) {
+          setFeedback(`Tempo scaduto! La risposta era ${answer}.`, "bad");
+          playSound("timeout");
+        } else {
+          setFeedback(`Quasi! La risposta era ${answer}. 🌸`, "bad");
+          playSound("wrong");
+        }
+      }
+
+      updateHud();
+      setTimeout(nextQuestion, 850);
+    }
+
+    function renderQuestion() {
+      if (state.questionIndex >= TOTAL_QUESTIONS) {
+        finishRound();
+        return;
+      }
+
+      const multiplier = state.questions[state.questionIndex];
+      const { answer, options } = createOptions(state.selectedTable, multiplier);
+
+      state.currentQuestion = {
+        multiplier,
+        answer
+      };
+
+      elements.questionText.textContent = `${state.selectedTable} × ${multiplier} = ?`;
+      elements.questionText.classList.remove("slide-in");
+      void elements.questionText.offsetWidth;
+      elements.questionText.classList.add("slide-in");
+      setFeedback("");
+      updateHud();
+      renderChoices(options, answer);
+      unlockChoices();
+      startTimer();
+    }
+
+    function nextQuestion() {
+      state.questionIndex += 1;
+      renderQuestion();
+    }
+
+    function buildStarString(score, total) {
+      const filled = "⭐".repeat(score);
+      const empty = "☆".repeat(Math.max(0, total - score));
+      return filled + empty;
+    }
+
+    function fireworkCelebration() {
+      if (typeof confetti !== "function") {
+        return;
+      }
+
+      const endTime = Date.now() + 1300;
+      const colors = ["#ff72b6", "#ffd76a", "#7de0b1", "#84c7ff", "#fff"];
+
+      (function frame() {
+        confetti({
+          particleCount: 4,
+          angle: 60,
+          spread: 70,
+          origin: { x: 0, y: 0.6 },
+          colors
+        });
+        confetti({
+          particleCount: 4,
+          angle: 120,
+          spread: 70,
+          origin: { x: 1, y: 0.6 },
+          colors
+        });
+
+        if (Date.now() < endTime) {
+          requestAnimationFrame(frame);
+        }
+      })();
+    }
+
+    function finishRound() {
+      clearTimer();
+      showScreen("results");
+
+      const answered = state.questionIndex;
+      const score = state.score;
+      const passedCrown = score >= 7;
+
+      elements.resultsTitle.textContent = `Bravissima, ${state.playerName}!`;
+      if (answered < TOTAL_QUESTIONS) {
+        elements.resultsSubtitle.textContent = `Hai risposto a ${answered} domande su ${TOTAL_QUESTIONS} — Punteggio: ${score} ⭐`;
+      } else {
+        elements.resultsSubtitle.textContent = `Hai fatto ${score} su ${TOTAL_QUESTIONS}!`;
+      }
+      elements.resultsStars.textContent = buildStarString(score, TOTAL_QUESTIONS);
+
+      if (score === TOTAL_QUESTIONS) {
+        elements.resultsCopy.textContent = "Punteggio perfetto! Sei una principessa della matematica! 👑✨";
+      } else if (passedCrown) {
+        elements.resultsCopy.textContent = "Corona conquistata! Il tuo regno brilla! 👑";
+      } else {
+        elements.resultsCopy.textContent = "Bel lavoro! Rigioca per conquistare la corona con 7 stelle!";
+      }
+
+      if (passedCrown) {
+        elements.princess.classList.add("crowned");
+        elements.resultsPrincess.classList.add("crowned");
+      }
+
+      fireworkCelebration();
+      playSound(score === TOTAL_QUESTIONS ? "perfect" : "fanfare");
+    }
+
+    function createSparkles() {
+      const symbols = ["✦", "✧", "✨", "★"];
+      for (let i = 0; i < 26; i += 1) {
+        const sparkle = document.createElement("span");
+        sparkle.className = "sparkle";
+        sparkle.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        sparkle.style.left = `${Math.random() * 100}%`;
+        sparkle.style.bottom = `${-10 - Math.random() * 65}px`;
+        sparkle.style.fontSize = `${10 + Math.random() * 20}px`;
+        sparkle.style.animationDuration = `${9 + Math.random() * 13}s`;
+        sparkle.style.animationDelay = `${Math.random() * 8}s`;
+        elements.sparkles.appendChild(sparkle);
+      }
+    }
+
+    elements.muteBtn.addEventListener("click", toggleMute);
+    elements.startBtn.addEventListener("click", () => { playSound("click"); startGame(); });
+    elements.playAgainBtn.addEventListener("click", () => { playSound("click"); startGame(); });
+    elements.changeTableBtn.addEventListener("click", () => {
+      playSound("click");
+      showScreen("welcome");
+    });
+    elements.exitBtn.addEventListener("click", () => { playSound("click"); exitGame(); });
+
+    // Restore saved name from previous sessions
+    try {
+      const saved = localStorage.getItem("pmq_name");
+      if (saved) elements.playerName.value = saved;
+    } catch (_) {}
+
+    buildTableButtons();
+    buildTimerButtons();
+    createSparkles();
+  </script>
+</body>
+</html>
