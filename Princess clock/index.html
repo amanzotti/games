@@ -206,14 +206,17 @@
     .teach-card p { font-size: 1.05rem; line-height: 1.7; margin: 8px 0; }
     .teach-canvas { margin: 12px auto; display: block; }
 
-    .mute-btn {
-      position: fixed; top: 14px; right: 14px; z-index: 100; border: none; border-radius: 50%;
+    .top-btn {
+      position: fixed; top: 14px; z-index: 100; border: none; border-radius: 50%;
       width: 48px; height: 48px; font-size: 1.35rem; background: var(--card);
       box-shadow: 0 4px 14px rgba(60,20,100,0.18); cursor: pointer;
       transition: transform 120ms ease, box-shadow 120ms ease;
       display: grid; place-items: center; border: 2px solid var(--lav-200);
+      text-decoration: none;
     }
-    .mute-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(60,20,100,0.26); }
+    .top-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(60,20,100,0.26); }
+    .home-btn { left: 14px; }
+    .mute-btn { right: 14px; }
 
     @media (max-width: 520px) {
       .choices { grid-template-columns: repeat(2, 1fr); }
@@ -222,7 +225,8 @@
   </style>
 </head>
 <body>
-  <button class="mute-btn" id="mute-btn" aria-label="Attiva suono" title="Suono">🔇</button>
+  <a href="../index.html" class="top-btn home-btn" aria-label="Torna ai giochi" title="Tutti i giochi">🏠</a>
+  <button class="top-btn mute-btn" id="mute-btn" aria-label="Attiva suono" title="Suono">🔇</button>
   <div class="sparkles" id="sparkles"></div>
 
   <!-- Teaching overlay -->
@@ -1016,7 +1020,7 @@
     function init(){
       initSparkles();
       buildLevelBtns(); buildModeBtns();
-      try{el.playerName.value=localStorage.getItem("gcq_name")||"";}catch(_){}
+      try{el.playerName.value=localStorage.getItem("gcq_name")||"Virgi";}catch(_){el.playerName.value="Virgi";}
       selectLevel(1);selectMode("read");
 
       el.muteBtn.addEventListener("click",toggleMute);

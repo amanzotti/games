@@ -321,6 +321,25 @@
       color: var(--bad);
     }
 
+    .strategy-hint {
+      text-align: center;
+      margin: 8px auto 0;
+      max-width: 520px;
+      padding: 10px 16px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #fff8e1, #fff3cd);
+      border: 2px solid #ffe082;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #5d4037;
+      line-height: 1.45;
+      display: none;
+      animation: fadeIn 300ms ease-out;
+    }
+
+    .strategy-hint.visible { display: block; }
+    .strategy-hint .hint-icon { font-size: 1.2rem; vertical-align: middle; margin-right: 4px; }
+
     .choices {
       margin-top: 12px;
       display: grid;
@@ -447,10 +466,9 @@
       }
     }
 
-    .mute-btn {
+    .top-btn {
       position: fixed;
       top: 14px;
-      right: 14px;
       z-index: 100;
       border: none;
       border-radius: 50%;
@@ -464,16 +482,167 @@
       display: grid;
       place-items: center;
       border: 2px solid #ffd7eb;
+      text-decoration: none;
     }
 
-    .mute-btn:hover {
+    .top-btn:hover {
       transform: scale(1.08);
       box-shadow: 0 6px 20px rgba(111, 34, 89, 0.26);
+    }
+
+    .home-btn { left: 14px; }
+    .mute-btn { right: 14px; }
+
+    .table-btn.all-mode {
+      grid-column: span 2;
+      background: linear-gradient(180deg, #fff8e1, #ffe082);
+      border-color: #ffca28;
+    }
+
+    .table-btn.all-mode.selected {
+      background: linear-gradient(180deg, #ffe082, #ffd54f);
+      border-color: #ffa000;
+      box-shadow: 0 8px 20px rgba(255, 160, 0, 0.35);
+    }
+
+    .mastery-table {
+      border-collapse: separate;
+      border-spacing: 3px;
+      margin: 14px auto;
+      font-size: clamp(0.7rem, 2vw, 0.9rem);
+    }
+
+    .mastery-table td,
+    .mastery-table th {
+      width: clamp(28px, 5vw, 40px);
+      height: clamp(28px, 5vw, 40px);
+      text-align: center;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .mastery-table td {
+      cursor: default;
+      transition: transform 120ms ease;
+    }
+
+    .mastery-table td:hover {
+      transform: scale(1.15);
+      z-index: 2;
+      position: relative;
+    }
+
+    .mastery-header {
+      background: transparent !important;
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .mastery-legend {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 12px 0;
+      font-size: 0.9rem;
+    }
+
+    .mastery-legend span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .mastery-legend .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .mastery-stats {
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 8px 0;
+    }
+
+    .progress-bar-outer {
+      background: #f0d4e3;
+      border-radius: 999px;
+      height: 20px;
+      overflow: hidden;
+      margin: 8px auto;
+      max-width: 400px;
+      border: 2px solid #e8b8d4;
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, #82e082, #4caf50);
+      border-radius: 999px;
+      transition: width 500ms ease;
+    }
+
+    .mastery-progress-bar {
+      margin-top: 16px;
+    }
+
+    .mastery-progress-text {
+      text-align: center;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .session-insights {
+      margin-top: 14px;
+    }
+
+    .session-insight-section {
+      margin: 8px 0;
+    }
+
+    .session-insight-section h3 {
+      font-size: 1rem;
+      margin: 6px 0;
+    }
+
+    .insight-fact {
+      display: inline-block;
+      padding: 4px 10px;
+      margin: 3px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .insight-fact.weak {
+      background: #ffe0e0;
+      color: #b71c1c;
+    }
+
+    .insight-fact.strong {
+      background: #e0f5e0;
+      color: #1b5e20;
+    }
+
+    @media (max-width: 520px) {
+      .mastery-table {
+        font-size: 0.65rem;
+      }
+
+      .mastery-table td,
+      .mastery-table th {
+        width: 26px;
+        height: 26px;
+      }
     }
   </style>
 </head>
 <body>
-  <button class="mute-btn" id="mute-btn" aria-label="Attiva suono" title="Suono">🔇</button>
+  <a href="../index.html" class="top-btn home-btn" aria-label="Torna ai giochi" title="Tutti i giochi">🏠</a>
+  <button class="top-btn mute-btn" id="mute-btn" aria-label="Attiva suono" title="Suono">🔇</button>
   <div class="sparkles" id="sparkles"></div>
 
   <main>
@@ -500,6 +669,7 @@
 
       <div class="btn-row">
         <button class="primary-btn" id="start-btn" disabled>GIOCA ✨</button>
+        <button class="secondary-btn" id="mastery-btn">📊 Progressi</button>
       </div>
       <p class="tiny-note" id="round-note">10 domande, 4 risposte, 5 secondi per domanda.</p>
     </section>
@@ -520,6 +690,7 @@
       </div>
 
       <div class="feedback" id="feedback"></div>
+      <div class="strategy-hint" id="strategy-hint"></div>
       <div class="choices" id="choices"></div>
 
       <div class="princess-wrap">
@@ -539,10 +710,28 @@
       </div>
       <div class="results-stars" id="results-stars"></div>
       <p class="results-copy" id="results-copy"></p>
+      <div class="session-insights" id="session-insights" style="display:none"></div>
 
       <div class="btn-row">
         <button class="primary-btn" id="play-again-btn">RIGIOCA 🔄</button>
         <button class="secondary-btn" id="change-table-btn">Cambia Tabellina 📖</button>
+      </div>
+    </section>
+
+    <section class="screen" id="mastery-screen" aria-label="Progressi">
+      <h1>I Tuoi Progressi 📊</h1>
+      <p class="subtitle">Vedi come stai andando con tutte le tabelline!</p>
+      <div class="mastery-stats" id="mastery-stats"></div>
+      <div id="mastery-grid"></div>
+      <div class="mastery-legend">
+        <span><span class="dot" style="background:#e0e0e0"></span> Mai provato</span>
+        <span><span class="dot" style="background:#ff8a8a"></span> Da ripassare</span>
+        <span><span class="dot" style="background:#ffcc66"></span> Quasi</span>
+        <span><span class="dot" style="background:#82e082"></span> Bravissima!</span>
+      </div>
+      <div class="btn-row">
+        <button class="primary-btn" id="mastery-back-btn">Indietro 🔙</button>
+        <button class="secondary-btn" id="mastery-reset-btn">Azzera Progressi 🗑️</button>
       </div>
     </section>
   </main>
@@ -550,13 +739,14 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
     const TOTAL_QUESTIONS = 10;
-    const TIMER_OPTIONS = [3, 5, 7, 10, 15];
-    const DEFAULT_TIMER = 5;
+    const TIMER_OPTIONS = [0, 3, 5, 7, 10, 15];
+    const DEFAULT_TIMER = 0;
 
     const screens = {
       welcome: document.getElementById("welcome-screen"),
       game: document.getElementById("game-screen"),
-      results: document.getElementById("results-screen")
+      results: document.getElementById("results-screen"),
+      mastery: document.getElementById("mastery-screen")
     };
 
     const elements = {
@@ -582,12 +772,18 @@
       playAgainBtn: document.getElementById("play-again-btn"),
       changeTableBtn: document.getElementById("change-table-btn"),
       sparkles: document.getElementById("sparkles"),
-      muteBtn: document.getElementById("mute-btn")
+      muteBtn: document.getElementById("mute-btn"),
+      masteryBtn: document.getElementById("mastery-btn"),
+      masteryGrid: document.getElementById("mastery-grid"),
+      masteryStats: document.getElementById("mastery-stats"),
+      masteryBackBtn: document.getElementById("mastery-back-btn"),
+      masteryResetBtn: document.getElementById("mastery-reset-btn"),
+      sessionInsights: document.getElementById("session-insights")
     };
 
     const state = {
       playerName: "Principessa",
-      selectedTable: null,
+      selectedTables: new Set(),
       selectedTimer: DEFAULT_TIMER,
       score: 0,
       streak: 0,
@@ -596,7 +792,8 @@
       currentQuestion: null,
       timerHandle: null,
       choiceLocked: false,
-      secondsLeft: DEFAULT_TIMER
+      secondsLeft: DEFAULT_TIMER,
+      sessionResults: []
     };
 
     const praiseTexts = ["Bravissima!", "Fantastico!", "Che stella! ⭐", "Perfetto!", "Grande! 🌟", "Magico! ✨"];
@@ -623,6 +820,8 @@
       if (soundEnabled) {
         ensureAudioContext();
         playSound("click");
+      } else if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
       }
     }
 
@@ -687,6 +886,157 @@
       }
     }
 
+    function speak(text) {
+      if (!soundEnabled) return;
+      if (!("speechSynthesis" in window)) return;
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "it-IT";
+      utterance.rate = 0.85;
+      utterance.pitch = 1.1;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // --------------- Mastery tracking system ---------------
+    const MASTERY_KEY = "pmq_mastery_v1";
+    const ALL_FACTS = [];
+    for (let t = 2; t <= 12; t++) {
+      for (let m = 1; m <= 10; m++) {
+        ALL_FACTS.push({ table: t, multiplier: m });
+      }
+    }
+
+    function loadMastery() {
+      try {
+        const raw = localStorage.getItem(MASTERY_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (_) { return {}; }
+    }
+
+    function saveMastery(data) {
+      try { localStorage.setItem(MASTERY_KEY, JSON.stringify(data)); } catch (_) {}
+    }
+
+    function factKey(t, m) { return `${t}x${m}`; }
+
+    function recordFactResult(table, multiplier, correct) {
+      const data = loadMastery();
+      const key = factKey(table, multiplier);
+      if (!data[key]) data[key] = { c: 0, a: 0 };
+      data[key].a += 1;
+      if (correct) data[key].c += 1;
+      data[key].t = Date.now();
+      saveMastery(data);
+    }
+
+    function getMasteryLevel(ratio, attempts) {
+      if (ratio < 0 || attempts === 0) return 0;
+      if (ratio < 0.5) return 1;
+      if (ratio < 0.8) return 2;
+      if (ratio >= 0.8 && attempts >= 3) return 3;
+      return 2;
+    }
+
+    function getMasteryColor(level) {
+      return ["#e0e0e0", "#ff8a8a", "#ffcc66", "#82e082"][level] || "#e0e0e0";
+    }
+
+    function countMastered() {
+      const data = loadMastery();
+      let count = 0;
+      ALL_FACTS.forEach(f => {
+        const entry = data[factKey(f.table, f.multiplier)];
+        if (entry && entry.a >= 3 && (entry.c / entry.a) >= 0.8) count++;
+      });
+      return count;
+    }
+
+    function generateAdaptiveQuestions(count) {
+      const data = loadMastery();
+      const categorized = { struggling: [], needsWork: [], mastered: [], newFacts: [] };
+
+      // Scope facts to selected tables
+      const scopedFacts = ALL_FACTS.filter(f => state.selectedTables.has(f.table));
+
+      scopedFacts.forEach(f => {
+        const entry = data[factKey(f.table, f.multiplier)];
+        const attempts = entry ? entry.a : 0;
+        const ratio = attempts > 0 ? entry.c / entry.a : -1;
+        const fact = { table: f.table, multiplier: f.multiplier, ratio, attempts };
+
+        if (attempts === 0) categorized.newFacts.push(fact);
+        else if (ratio < 0.5) categorized.struggling.push(fact);
+        else if (ratio < 0.8 || attempts < 3) categorized.needsWork.push(fact);
+        else categorized.mastered.push(fact);
+      });
+
+      const questions = [];
+
+      // Priority 1: Struggling facts (up to 40%)
+      const s1 = Math.min(Math.ceil(count * 0.4), categorized.struggling.length);
+      questions.push(...shuffle(categorized.struggling).slice(0, s1));
+
+      // Priority 2: Needs work (up to 30%)
+      const s2 = Math.min(Math.ceil(count * 0.3), categorized.needsWork.length);
+      questions.push(...shuffle(categorized.needsWork).slice(0, s2));
+
+      // Priority 3: New facts - introduce gradually (up to 20%, max 4)
+      const s3 = Math.min(Math.ceil(count * 0.2), categorized.newFacts.length, 4);
+      questions.push(...shuffle(categorized.newFacts).slice(0, s3));
+
+      // Fill remaining with mastered (spaced review)
+      const remaining = count - questions.length;
+      if (remaining > 0 && categorized.mastered.length > 0) {
+        questions.push(...shuffle(categorized.mastered).slice(0, remaining));
+      }
+
+      // If still not enough, fill from scoped facts
+      while (questions.length < count) {
+        const f = scopedFacts[Math.floor(Math.random() * scopedFacts.length)];
+        questions.push({ table: f.table, multiplier: f.multiplier });
+      }
+
+      return shuffle(questions).map(f => ({ table: f.table, multiplier: f.multiplier }));
+    }
+
+    function renderMasteryGrid() {
+      const data = loadMastery();
+      let mastered = 0;
+      const total = ALL_FACTS.length;
+
+      let html = '<table class="mastery-table"><tr><th class="mastery-header">×</th>';
+      for (let m = 1; m <= 10; m++) html += `<th class="mastery-header">${m}</th>`;
+      html += '</tr>';
+
+      for (let t = 2; t <= 12; t++) {
+        html += `<tr><th class="mastery-header">${t}</th>`;
+        for (let m = 1; m <= 10; m++) {
+          const entry = data[factKey(t, m)];
+          const attempts = entry ? entry.a : 0;
+          const ratio = attempts > 0 ? entry.c / entry.a : -1;
+          const level = getMasteryLevel(ratio, attempts);
+          if (level === 3) mastered++;
+          const color = getMasteryColor(level);
+          const answer = t * m;
+          const pctText = attempts > 0 ? Math.round(ratio * 100) + '%' : '—';
+          html += `<td style="background:${color}" title="${t}×${m}=${answer} (${pctText})">${answer}</td>`;
+        }
+        html += '</tr>';
+      }
+      html += '</table>';
+
+      elements.masteryGrid.innerHTML = html;
+      const pct = Math.round(mastered / total * 100);
+      elements.masteryStats.innerHTML = `Padroneggi <strong>${mastered}</strong> su <strong>${total}</strong> tabelline (${pct}%)<div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%"></div></div>`;
+    }
+
+    function resetMastery() {
+      if (!confirm("Sei sicura di voler azzerare tutti i progressi?")) return;
+      try { localStorage.removeItem(MASTERY_KEY); } catch (_) {}
+      renderMasteryGrid();
+    }
+
     function showScreen(name) {
       Object.values(screens).forEach((screen) => screen.classList.remove("active"));
       screens[name].classList.add("active");
@@ -708,9 +1058,21 @@
         button.className = "table-btn";
         button.textContent = table;
         button.setAttribute("aria-label", `Tabellina del ${table}`);
-        button.addEventListener("click", () => selectTable(table));
+        button.addEventListener("click", () => toggleTable(table));
         elements.tableButtons.appendChild(button);
       }
+      // "All tables" button
+      const allBtn = document.createElement("button");
+      allBtn.type = "button";
+      allBtn.className = "table-btn all-mode";
+      allBtn.textContent = "TUTTE \u2728";
+      allBtn.setAttribute("aria-label", "Tutte le tabelline");
+      allBtn.addEventListener("click", () => toggleAllTables());
+      elements.tableButtons.appendChild(allBtn);
+    }
+
+    function timerLabel(seconds) {
+      return seconds === 0 ? "∞" : `${seconds}s`;
     }
 
     function buildTimerButtons() {
@@ -718,8 +1080,8 @@
         const button = document.createElement("button");
         button.type = "button";
         button.className = "table-btn";
-        button.textContent = `${seconds}s`;
-        button.setAttribute("aria-label", `${seconds} secondi`);
+        button.textContent = timerLabel(seconds);
+        button.setAttribute("aria-label", seconds === 0 ? "Senza tempo" : `${seconds} secondi`);
         if (seconds === DEFAULT_TIMER) button.classList.add("selected");
         button.addEventListener("click", () => selectTimer(seconds));
         elements.timerButtons.appendChild(button);
@@ -729,21 +1091,70 @@
     function selectTimer(seconds) {
       state.selectedTimer = seconds;
       [...elements.timerButtons.children].forEach((btn) => {
-        btn.classList.toggle("selected", btn.textContent === `${seconds}s`);
+        btn.classList.toggle("selected", btn.textContent === timerLabel(seconds));
       });
       updateRoundNote();
     }
 
-    function updateRoundNote() {
-      elements.roundNote.textContent = `10 domande, 4 risposte, ${state.selectedTimer} secondi per domanda.`;
+    function isAllTablesMode() {
+      return state.selectedTables.size === 11; // tables 2-12
     }
 
-    function selectTable(table) {
-      state.selectedTable = table;
+    function isMultiTableMode() {
+      return state.selectedTables.size > 1;
+    }
+
+    function updateRoundNote() {
+      const count = state.selectedTables.size;
+      if (count === 0) {
+        elements.roundNote.textContent = "Scegli almeno una tabellina per iniziare!";
+      } else if (isAllTablesMode()) {
+        const m = countMastered();
+        const timeText = state.selectedTimer === 0 ? "senza tempo" : `${state.selectedTimer}s`;
+        elements.roundNote.textContent = `Tutte le tabelline! 15 domande adattive, ${timeText}. Padroneggi ${m}/110.`;
+      } else if (count > 1) {
+        const tables = [...state.selectedTables].sort((a, b) => a - b).join(", ");
+        const numQ = Math.min(count * 5, 15);
+        const timeText = state.selectedTimer === 0 ? "senza tempo" : `${state.selectedTimer}s per domanda`;
+        elements.roundNote.textContent = `Tabelline del ${tables} — ${numQ} domande, ${timeText}.`;
+      } else if (state.selectedTimer === 0) {
+        elements.roundNote.textContent = "10 domande, 4 risposte, senza tempo — nessuna fretta!";
+      } else {
+        elements.roundNote.textContent = `10 domande, 4 risposte, ${state.selectedTimer} secondi per domanda.`;
+      }
+    }
+
+    function refreshTableButtonStyles() {
+      const allSelected = isAllTablesMode();
       [...elements.tableButtons.children].forEach((btn) => {
-        btn.classList.toggle("selected", Number(btn.textContent) === table);
+        if (btn.classList.contains("all-mode")) {
+          btn.classList.toggle("selected", allSelected);
+        } else {
+          btn.classList.toggle("selected", state.selectedTables.has(Number(btn.textContent)));
+        }
       });
-      elements.startBtn.disabled = false;
+    }
+
+    function toggleTable(table) {
+      if (state.selectedTables.has(table)) {
+        state.selectedTables.delete(table);
+      } else {
+        state.selectedTables.add(table);
+      }
+      refreshTableButtonStyles();
+      elements.startBtn.disabled = state.selectedTables.size === 0;
+      updateRoundNote();
+    }
+
+    function toggleAllTables() {
+      if (isAllTablesMode()) {
+        state.selectedTables.clear();
+      } else {
+        for (let t = 2; t <= 12; t++) state.selectedTables.add(t);
+      }
+      refreshTableButtonStyles();
+      elements.startBtn.disabled = state.selectedTables.size === 0;
+      updateRoundNote();
     }
 
     function startGame() {
@@ -753,7 +1164,19 @@
       state.streak = 0;
       state.questionIndex = 0;
       state.choiceLocked = false;
-      state.questions = shuffle(Array.from({ length: TOTAL_QUESTIONS }, (_, i) => i + 1));
+      state.sessionResults = [];
+
+      if (isMultiTableMode()) {
+        // Multi-table or all-tables: adaptive selection scoped to chosen tables
+        const numQ = isAllTablesMode() ? 15 : Math.min(state.selectedTables.size * 5, 15);
+        state.questions = generateAdaptiveQuestions(numQ);
+      } else {
+        // Single table: original behavior
+        const table = [...state.selectedTables][0];
+        const multipliers = shuffle(Array.from({ length: 10 }, (_, i) => i + 1)).slice(0, TOTAL_QUESTIONS);
+        state.questions = multipliers.map(m => ({ table, multiplier: m }));
+      }
+
       elements.princess.classList.remove("crowned");
       elements.resultsPrincess.classList.remove("crowned");
       showScreen("game");
@@ -763,6 +1186,82 @@
     function exitGame() {
       clearTimer();
       finishRound();
+    }
+
+    // ---- Strategy Hints (Italian) ----
+    // Tricks for each table, keyed by table number.
+    // Special hard facts get their own hint keyed as "AxB".
+    const STRATEGY_HINTS = {
+      // Per-table general tricks
+      1:  { trick: "Qualsiasi numero × 1 resta uguale! Facile!" },
+      2:  { trick: "Moltiplicare per 2 = raddoppia! Es: 2 × 7 = 7 + 7 = 14" },
+      3:  { trick: "Per la tabellina del 3: raddoppia e aggiungi una volta! Es: 3 × 4 = (4+4) + 4 = 12" },
+      4:  { trick: "Per il 4: raddoppia due volte! Es: 4 × 6 = raddoppia 6 → 12, raddoppia ancora → 24" },
+      5:  { trick: "Per il 5: conta con le dita! Numeri pari × 5 = metà con uno zero. Dispari × 5 = metà con il 5. Es: 5 × 8 = 40, 5 × 7 = 35" },
+      9:  { trick: "Trucco del 9: le cifre della risposta fanno sempre 9! Es: 9 × 7 = 63 → 6+3=9. Oppure: (numero−1) e poi completa a 9!" },
+      10: { trick: "Per il 10: aggiungi uno zero! Es: 10 × 7 = 70" },
+      11: { trick: "Per l'11 fino a 9: ripeti la cifra! Es: 11 × 4 = 44. Da 10 in su: somma le cifre nel mezzo!" },
+      12: { trick: "Per il 12: fai ×10 + ×2! Es: 12 × 7 = 70 + 14 = 84" },
+
+      // Hard specific facts with targeted tricks
+      "6x7":  { trick: "6 × 7: pensa 6 × 6 = 36, poi aggiungi 6 → 42! Oppure ricorda: 'Sei per Sette, Quarantadue!'" },
+      "6x8":  { trick: "6 × 8: pensa 6 × 10 = 60, togli due 6 → 60 − 12 = 48" },
+      "6x9":  { trick: "6 × 9: con il trucco del 9! (6−1)=5 davanti, poi 9−5=4 → 54" },
+      "7x7":  { trick: "7 × 7 = 49! Ricorda: 'Sette per Sette, quarantanove!'. Un numero speciale!" },
+      "7x8":  { trick: "7 × 8: la più difficile! Pensa: 5-6-7-8 → 56 = 7×8! Oppure 7×7=49 + 7 = 56" },
+      "7x9":  { trick: "7 × 9: trucco del 9! (7−1)=6 davanti, 9−6=3 → 63" },
+      "8x8":  { trick: "8 × 8 = 64! Ricorda: una scacchiera ha 64 caselle (8 righe × 8 colonne)!" },
+      "8x9":  { trick: "8 × 9: trucco del 9! (8−1)=7 davanti, 9−7=2 → 72" },
+      "9x9":  { trick: "9 × 9 = 81! Trucco del 9: (9−1)=8, poi 9−8=1 → 81" },
+      "3x7":  { trick: "3 × 7: raddoppia 7 = 14, poi aggiungi 7 → 21" },
+      "3x8":  { trick: "3 × 8: raddoppia 8 = 16, poi aggiungi 8 → 24" },
+      "4x7":  { trick: "4 × 7: raddoppia 7 = 14, raddoppia ancora → 28!" },
+      "4x8":  { trick: "4 × 8: raddoppia 8 = 16, raddoppia ancora → 32!" },
+      "6x6":  { trick: "6 × 6 = 36! Ricorda: 'Sei per Sei, Trentasei!'" },
+      "7x12": { trick: "7 × 12: fai 7×10 = 70 + 7×2 = 14 → 84!" },
+      "8x12": { trick: "8 × 12: fai 8×10 = 80 + 8×2 = 16 → 96!" },
+    };
+
+    function getStrategyHint(table, multiplier) {
+      // Check specific fact first (both directions: AxB and BxA)
+      const a = Math.min(table, multiplier), b = Math.max(table, multiplier);
+      const specificKey = `${a}x${b}`;
+      if (STRATEGY_HINTS[specificKey]) return STRATEGY_HINTS[specificKey].trick;
+      // Fall back to table-level trick
+      if (STRATEGY_HINTS[table]) return STRATEGY_HINTS[table].trick;
+      if (STRATEGY_HINTS[multiplier]) return STRATEGY_HINTS[multiplier].trick;
+      return null;
+    }
+
+    function shouldShowHint(table, multiplier) {
+      const data = loadMastery();
+      const key = factKey(table, multiplier);
+      const entry = data[key];
+      // Show hint if: 2+ attempts and accuracy below 60%, or first-time wrong
+      if (!entry) return true; // first time getting it wrong — teach!
+      return entry.a >= 2 && (entry.c / entry.a) < 0.6;
+    }
+
+    function showStrategyHint(table, multiplier) {
+      const hintEl = document.getElementById("strategy-hint");
+      if (!shouldShowHint(table, multiplier)) {
+        hintEl.className = "strategy-hint";
+        return false;
+      }
+      const hint = getStrategyHint(table, multiplier);
+      if (!hint) {
+        hintEl.className = "strategy-hint";
+        return false;
+      }
+      hintEl.innerHTML = `<span class="hint-icon">💡</span> ${hint}`;
+      hintEl.className = "strategy-hint visible";
+      // Speak the hint after a short pause
+      setTimeout(() => speak(hint), 600);
+      return true;
+    }
+
+    function hideStrategyHint() {
+      document.getElementById("strategy-hint").className = "strategy-hint";
     }
 
     function setFeedback(message, type = "") {
@@ -809,8 +1308,15 @@
 
     function updateHud() {
       elements.scoreLabel.textContent = `Punteggio: ${state.score} ⭐`;
-      elements.progressLabel.textContent = `Domanda ${state.questionIndex + 1} / ${TOTAL_QUESTIONS}`;
-      elements.tableTitle.textContent = `Tabellina del ${state.selectedTable}`;
+      elements.progressLabel.textContent = `Domanda ${state.questionIndex + 1} / ${state.questions.length}`;
+      if (isAllTablesMode()) {
+        elements.tableTitle.textContent = "Tutte le Tabelline ✨";
+      } else if (isMultiTableMode()) {
+        const tables = [...state.selectedTables].sort((a, b) => a - b).join(", ");
+        elements.tableTitle.textContent = `Tabelline: ${tables}`;
+      } else {
+        elements.tableTitle.textContent = `Tabellina del ${[...state.selectedTables][0]}`;
+      }
     }
 
     function clearTimer() {
@@ -823,10 +1329,16 @@
     function startTimer() {
       clearTimer();
       const duration = state.selectedTimer;
+      if (duration === 0) {
+        elements.timerBar.style.width = "100%";
+        elements.timerBar.style.background = "linear-gradient(90deg, #7cd6ac, #b8f3d2)";
+        return;
+      }
       state.secondsLeft = duration;
       elements.timerBar.style.width = "100%";
 
       const started = performance.now();
+      let hintShown = false;
       state.timerHandle = setInterval(() => {
         const elapsed = (performance.now() - started) / 1000;
         const left = Math.max(0, duration - elapsed);
@@ -840,11 +1352,32 @@
           elements.timerBar.style.background = "";
         }
 
+        // Show hint at 40% time remaining — eliminate 2 wrong answers
+        if (!hintShown && pct < 40) {
+          hintShown = true;
+          showHint();
+        }
+
         if (left <= 0) {
           clearTimer();
           handleAnswer(null, true);
         }
       }, 60);
+    }
+
+    function showHint() {
+      if (!state.currentQuestion) return;
+      const answer = state.currentQuestion.answer;
+      const buttons = [...elements.choices.children];
+      // Find wrong buttons
+      const wrongBtns = buttons.filter(b => Number(b.textContent) !== answer && !b.disabled);
+      // Fade out up to 2 wrong answers to leave 2 options (one correct)
+      const toRemove = wrongBtns.slice(0, 2);
+      toRemove.forEach(b => {
+        b.style.opacity = "0.3";
+        b.style.pointerEvents = "none";
+        b.disabled = true;
+      });
     }
 
     function renderChoices(options, answer) {
@@ -991,23 +1524,50 @@
 
       const answer = state.currentQuestion.answer;
       const isCorrect = value === answer;
+      const table = state.currentQuestion.table;
+      const multiplier = state.currentQuestion.multiplier;
+
+      // Record mastery data
+      recordFactResult(table, multiplier, isCorrect);
+      state.sessionResults.push({ table, multiplier, correct: isCorrect });
 
       if (isCorrect) {
         state.score += 1;
         celebrateCorrect();
+        speak("Bravissima!");
       } else {
         markCorrectAnswer(answer);
         if (clickedButton) {
           clickedButton.classList.add("wrong");
         }
         state.streak = 0;
-        if (timedOut) {
-          setFeedback(`Tempo scaduto! La risposta era ${answer}.`, "bad");
-          playSound("timeout");
-        } else {
-          setFeedback(`Quasi! La risposta era ${answer}. 🌸`, "bad");
-          playSound("wrong");
+
+        // In multi-table mode, re-queue wrong fact for retry
+        if (isMultiTableMode()) {
+          const retryPos = Math.min(
+            state.questionIndex + 3 + Math.floor(Math.random() * 3),
+            state.questions.length
+          );
+          state.questions.splice(retryPos, 0, { table, multiplier });
         }
+
+        const factStr = `${table} × ${multiplier} = ${answer}`;
+        if (timedOut) {
+          setFeedback(`Tempo scaduto! ${factStr} ⏰`, "bad");
+          playSound("timeout");
+          speak(`Tempo scaduto. ${table} per ${multiplier} fa ${answer}.`);
+        } else {
+          setFeedback(`Quasi! ${factStr} 🌸`, "bad");
+          playSound("wrong");
+          speak(`Quasi! ${table} per ${multiplier} fa ${answer}.`);
+        }
+
+        // Show strategy hint for struggling facts
+        const hintShown = showStrategyHint(table, multiplier);
+        // Give more time to read the hint
+        updateHud();
+        setTimeout(nextQuestion, hintShown ? 4000 : 850);
+        return;
       }
 
       updateHud();
@@ -1015,24 +1575,27 @@
     }
 
     function renderQuestion() {
-      if (state.questionIndex >= TOTAL_QUESTIONS) {
+      if (state.questionIndex >= state.questions.length) {
         finishRound();
         return;
       }
 
-      const multiplier = state.questions[state.questionIndex];
-      const { answer, options } = createOptions(state.selectedTable, multiplier);
+      const q = state.questions[state.questionIndex];
+      const { answer, options } = createOptions(q.table, q.multiplier);
 
       state.currentQuestion = {
-        multiplier,
+        table: q.table,
+        multiplier: q.multiplier,
         answer
       };
 
-      elements.questionText.textContent = `${state.selectedTable} × ${multiplier} = ?`;
+      elements.questionText.textContent = `${q.table} × ${q.multiplier} = ?`;
       elements.questionText.classList.remove("slide-in");
       void elements.questionText.offsetWidth;
       elements.questionText.classList.add("slide-in");
       setFeedback("");
+      hideStrategyHint();
+      speak(`Quanto fa ${q.table} per ${q.multiplier}?`);
       updateHud();
       renderChoices(options, answer);
       unlockChoices();
@@ -1084,33 +1647,91 @@
       clearTimer();
       showScreen("results");
 
-      const answered = state.questionIndex;
+      const totalQ = state.questions.length;
       const score = state.score;
-      const passedCrown = score >= 7;
+      const answered = state.questionIndex;
 
       elements.resultsTitle.textContent = `Bravissima, ${state.playerName}!`;
-      if (answered < TOTAL_QUESTIONS) {
-        elements.resultsSubtitle.textContent = `Hai risposto a ${answered} domande su ${TOTAL_QUESTIONS} — Punteggio: ${score} ⭐`;
-      } else {
-        elements.resultsSubtitle.textContent = `Hai fatto ${score} su ${TOTAL_QUESTIONS}!`;
-      }
-      elements.resultsStars.textContent = buildStarString(score, TOTAL_QUESTIONS);
 
-      if (score === TOTAL_QUESTIONS) {
-        elements.resultsCopy.textContent = "Punteggio perfetto! Sei una principessa della matematica! 👑✨";
-      } else if (passedCrown) {
-        elements.resultsCopy.textContent = "Corona conquistata! Il tuo regno brilla! 👑";
-      } else {
-        elements.resultsCopy.textContent = "Bel lavoro! Rigioca per conquistare la corona con 7 stelle!";
-      }
+      if (isMultiTableMode()) {
+        // Multi/all-tables mode: show adaptive insights
+        elements.resultsSubtitle.textContent = `Hai fatto ${score} su ${answered}!`;
+        elements.resultsStars.textContent = buildStarString(Math.min(score, 10), Math.min(answered, 10));
 
-      if (passedCrown) {
-        elements.princess.classList.add("crowned");
-        elements.resultsPrincess.classList.add("crowned");
+        // Build session insights
+        const wrongFacts = [];
+        const seen = new Set();
+        state.sessionResults.forEach(r => {
+          const key = `${r.table}×${r.multiplier}`;
+          if (!r.correct && !seen.has(key)) {
+            wrongFacts.push({ key, table: r.table, multiplier: r.multiplier });
+            seen.add(key);
+          }
+        });
+
+        let insightHtml = '';
+        if (wrongFacts.length > 0) {
+          insightHtml += '<div class="session-insight-section"><h3>Da ripassare 📝</h3><div>';
+          wrongFacts.forEach(f => {
+            insightHtml += `<span class="insight-fact weak">${f.table}×${f.multiplier}=${f.table * f.multiplier}</span>`;
+          });
+          insightHtml += '</div></div>';
+        }
+
+        const mastered = countMastered();
+        const pct = Math.round(mastered / 110 * 100);
+        insightHtml += `<div class="mastery-progress-bar"><div class="mastery-progress-text">Progressi: ${mastered}/110 tabelline padronegiate (${pct}%)</div><div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%"></div></div></div>`;
+
+        elements.sessionInsights.innerHTML = insightHtml;
+        elements.sessionInsights.style.display = 'block';
+
+        if (score === answered) {
+          elements.resultsCopy.textContent = "Punteggio perfetto! Sei una principessa della matematica! 👑✨";
+          speak("Punteggio perfetto! Sei una principessa della matematica!");
+        } else if (score >= answered * 0.7) {
+          elements.resultsCopy.textContent = "Corona conquistata! Continua così! 👑";
+          speak(`Bravissima ${state.playerName}! Corona conquistata!`);
+        } else {
+          elements.resultsCopy.textContent = "Bel lavoro! Rigioca per migliorare! 🌸";
+          speak(`Bel lavoro ${state.playerName}! Riprova per migliorare.`);
+        }
+
+        const passedCrown = score >= answered * 0.7;
+        if (passedCrown) {
+          elements.princess.classList.add("crowned");
+          elements.resultsPrincess.classList.add("crowned");
+        }
+      } else {
+        // Single table mode: original behavior
+        elements.sessionInsights.style.display = 'none';
+        const passedCrown = score >= 7;
+
+        if (answered < TOTAL_QUESTIONS) {
+          elements.resultsSubtitle.textContent = `Hai risposto a ${answered} domande su ${TOTAL_QUESTIONS} — Punteggio: ${score} ⭐`;
+        } else {
+          elements.resultsSubtitle.textContent = `Hai fatto ${score} su ${TOTAL_QUESTIONS}!`;
+        }
+        elements.resultsStars.textContent = buildStarString(score, TOTAL_QUESTIONS);
+
+        if (score === TOTAL_QUESTIONS) {
+          elements.resultsCopy.textContent = "Punteggio perfetto! Sei una principessa della matematica! 👑✨";
+          speak("Punteggio perfetto! Sei una principessa della matematica!");
+        } else if (passedCrown) {
+          elements.resultsCopy.textContent = "Corona conquistata! Il tuo regno brilla! 👑";
+          speak(`Bravissima ${state.playerName}! Corona conquistata!`);
+        } else {
+          elements.resultsCopy.textContent = "Bel lavoro! Rigioca per conquistare la corona con 7 stelle!";
+          speak(`Bel lavoro ${state.playerName}! Riprova per prendere la corona.`);
+        }
+
+        if (passedCrown) {
+          elements.princess.classList.add("crowned");
+          elements.resultsPrincess.classList.add("crowned");
+        }
       }
 
       fireworkCelebration();
-      playSound(score === TOTAL_QUESTIONS ? "perfect" : "fanfare");
+      playSound(score === totalQ ? "perfect" : "fanfare");
     }
 
     function createSparkles() {
@@ -1136,6 +1757,19 @@
       showScreen("welcome");
     });
     elements.exitBtn.addEventListener("click", () => { playSound("click"); exitGame(); });
+    elements.masteryBtn.addEventListener("click", () => {
+      playSound("click");
+      renderMasteryGrid();
+      showScreen("mastery");
+    });
+    elements.masteryBackBtn.addEventListener("click", () => {
+      playSound("click");
+      showScreen("welcome");
+    });
+    elements.masteryResetBtn.addEventListener("click", () => {
+      playSound("click");
+      resetMastery();
+    });
 
     // Restore saved name from previous sessions
     try {
@@ -1146,6 +1780,9 @@
     buildTableButtons();
     buildTimerButtons();
     createSparkles();
+
+    // Expose for testing
+    window._pmq = { state, generateAdaptiveQuestions, isMultiTableMode, isAllTablesMode };
   </script>
 </body>
 </html>

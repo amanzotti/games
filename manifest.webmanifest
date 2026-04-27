@@ -1,0 +1,24 @@
+{
+  "name": "Arcobaleno di Giochi",
+  "short_name": "Giochi",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffd3b3",
+  "theme_color": "#ff7a59",
+  "lang": "it",
+  "description": "Collezione di giochi educativi per bambini.",
+  "icons": [
+    {
+      "src": "icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

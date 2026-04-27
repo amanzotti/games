@@ -1,0 +1,1108 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>La Magia dell'Acca 🦉</title>
+  <style>
+    :root {
+      --amber-100: #fff8e7;
+      --amber-200: #ffecb8;
+      --amber-300: #ffd97a;
+      --amber-500: #f59e0b;
+      --teal-200: #b5ede0;
+      --teal-400: #2dd4a8;
+      --purple-200: #ddd0f8;
+      --purple-400: #a78bfa;
+      --purple-600: #7c3aed;
+      --ink: #3b2510;
+      --good: #16a368;
+      --bad: #cc406b;
+      --card: rgba(255,255,255,0.90);
+      --shadow: 0 12px 35px rgba(80,40,0,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Comic Sans MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(255,255,255,0.7), transparent 24%),
+        radial-gradient(circle at 88% 12%, rgba(200,160,255,0.35), transparent 28%),
+        radial-gradient(circle at 70% 90%, rgba(45,212,168,0.2), transparent 30%),
+        linear-gradient(155deg, #ffefd5 0%, #fff3d4 30%, #e8f4f0 65%, #e8d5ff 100%);
+      overflow-x: hidden;
+    }
+
+    /* Floating sparkles */
+    .sparkles { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+    .sparkle { position: absolute; opacity: 0; animation: driftUp linear infinite; will-change: transform, opacity; }
+    @keyframes driftUp {
+      0%   { transform: translateY(15vh) scale(.8); opacity: 0; }
+      10%  { opacity: .7; }
+      80%  { opacity: .8; }
+      100% { transform: translateY(-110vh) scale(1.15); opacity: 0; }
+    }
+
+    main { position: relative; z-index: 2; min-height: 100vh; display: grid; place-items: center; padding: 18px; }
+
+    .screen {
+      width: min(880px, 96vw); background: var(--card); backdrop-filter: blur(5px);
+      border: 3px solid rgba(255,255,255,0.7); border-radius: 26px;
+      box-shadow: var(--shadow); padding: clamp(18px, 3.4vw, 34px);
+      display: none; animation: fadeIn 300ms ease-out;
+    }
+    .screen.active { display: block; }
+    @keyframes fadeIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    h1 { font-size: clamp(1.8rem, 4.4vw, 2.6rem); text-align: center; }
+    .subtitle { text-align: center; margin: 8px 0 20px; font-size: clamp(1rem, 2.6vw, 1.15rem); }
+
+    /* Owl character (CSS-drawn) */
+    .owl-wrap { display: flex; justify-content: center; margin: 10px 0 8px; }
+    .owl {
+      font-size: clamp(64px, 14vw, 100px); line-height: 1;
+      animation: owlBounce 2.4s ease-in-out infinite;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.12));
+      cursor: default; user-select: none;
+    }
+    @keyframes owlBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* Name input */
+    .name-row { margin: 12px 0; }
+    .name-row label { font-weight: 700; display: block; margin-bottom: 6px; }
+    .name-input {
+      width: 100%; max-width: 340px; border: 2px solid var(--amber-200); border-radius: 12px;
+      padding: 12px 14px; font-size: 1.05rem; outline: none; background: #fffdf5; font-family: inherit;
+    }
+    .name-input:focus { border-color: var(--amber-500); box-shadow: 0 0 0 3px rgba(245,158,11,0.22); }
+
+    /* Buttons */
+    .primary-btn, .secondary-btn, .choice-btn, .level-btn {
+      border: none; border-radius: 14px; cursor: pointer; font-weight: 700;
+      font-family: inherit; transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+    .primary-btn {
+      padding: 14px 28px; font-size: 1.1rem;
+      background: linear-gradient(180deg, #fbbf24, #f59e0b); color: #5c3600;
+      box-shadow: 0 8px 20px rgba(245,158,11,0.35);
+    }
+    .primary-btn:hover { transform: translateY(-2px); }
+    .primary-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .secondary-btn {
+      padding: 12px 20px; font-size: 1rem;
+      background: linear-gradient(180deg, #b5ede0, #88dfc9); color: #1b5e4a;
+    }
+    .secondary-btn:hover { transform: translateY(-2px); }
+    .btn-row { margin-top: 14px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+    /* Level select grid */
+    .levels-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px; margin: 16px 0;
+    }
+    .level-btn {
+      padding: 18px 14px; font-size: 1.05rem; text-align: center;
+      background: linear-gradient(180deg, #fff, #fff8e7); border: 2px solid var(--amber-200);
+      position: relative;
+    }
+    .level-btn .level-num { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+    .level-btn .level-title { display: block; font-size: .95rem; }
+    .level-btn .level-stars { display: block; margin-top: 6px; font-size: 1rem; min-height: 1.2em; }
+    .level-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(245,158,11,0.25); }
+    .level-btn:disabled {
+      opacity: .55; cursor: not-allowed; transform: none;
+      background: linear-gradient(180deg, #f0f0f0, #e8e8e8); border-color: #d0d0d0;
+    }
+    .level-btn.completed {
+      background: linear-gradient(180deg, #d1fae5, #a7f3d0); border-color: #34d399;
+    }
+
+    /* Game HUD */
+    .game-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+    .hud-box {
+      background: #fffbeb; border: 2px solid var(--amber-200); border-radius: 14px;
+      padding: 8px 14px; font-weight: 700; font-size: .95rem; transition: transform 200ms ease;
+    }
+    .hud-box.pop { transform: scale(1.12); box-shadow: 0 0 18px rgba(245,158,11,0.45); }
+    .top-btn {
+      position: fixed; top: 14px; z-index: 100;
+      width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--amber-200);
+      background: var(--card); font-size: 1.3rem; cursor: pointer; display: grid; place-items: center;
+      box-shadow: 0 4px 14px rgba(80,40,0,0.15);
+      transition: transform 120ms ease; text-decoration: none;
+    }
+    .top-btn:hover { transform: scale(1.1); }
+    .home-btn { left: 14px; }
+    .mute-btn { right: 14px; }
+
+    /* Star progress dots */
+    .progress-dots { display: flex; justify-content: center; gap: 6px; margin: 10px 0 6px; flex-wrap: wrap; }
+    .dot {
+      width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+      font-size: .85rem; border: 2px solid #e8dcc8; background: #fdf8ef; transition: all 300ms ease;
+    }
+    .dot.correct { background: linear-gradient(135deg, #d1fae5, #6ee7b7); border-color: #34d399; }
+    .dot.wrong   { background: linear-gradient(135deg, #fce7f3, #ffa6c9); border-color: #f472b6; }
+    .dot.current { border-color: var(--amber-500); box-shadow: 0 0 8px rgba(245,158,11,0.5); transform: scale(1.15); }
+
+    /* Question card */
+    .question-card {
+      text-align: center; padding: 20px 18px; border-radius: 18px; margin: 12px 0;
+      background: linear-gradient(180deg, #fff, #fffbeb); border: 2px solid var(--amber-200);
+    }
+    .question-label { font-size: clamp(.95rem, 2.2vw, 1.1rem); font-weight: 600; margin-bottom: 8px; }
+    .sentence {
+      font-size: clamp(1.4rem, 4.5vw, 2.2rem); font-weight: 800; line-height: 1.4;
+      margin: 8px 0; letter-spacing: .01em;
+    }
+    .sentence .gap {
+      display: inline-block; min-width: 80px; border-bottom: 4px solid var(--amber-500);
+      margin: 0 4px; color: var(--amber-500); font-weight: 900;
+    }
+
+    /* Choice buttons */
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .choice-btn {
+      padding: 18px 12px; font-size: clamp(1.3rem, 4vw, 1.8rem);
+      background: linear-gradient(180deg, #fff, #fff8e7); border: 3px solid var(--amber-200);
+      min-height: 65px; letter-spacing: .02em;
+    }
+    .choice-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(245,158,11,0.3); border-color: var(--amber-500); }
+    .choice-btn:disabled { cursor: default; transform: none; }
+    .choice-btn.correct-pick {
+      background: linear-gradient(180deg, #d1fae5, #a7f3d0); border-color: #34d399; color: #065f46;
+      animation: popIn 400ms ease;
+    }
+    .choice-btn.wrong-pick {
+      background: linear-gradient(180deg, #fce7f3, #fbcfe8); border-color: #f472b6; color: #9d174d;
+      animation: wobble 420ms ease;
+    }
+    @keyframes popIn {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    @keyframes wobble {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    /* Feedback & rule explanation */
+    .feedback { min-height: 32px; text-align: center; margin-top: 10px; font-size: 1.1rem; font-weight: 800; }
+    .feedback.good { color: var(--good); }
+    .feedback.bad  { color: var(--bad); }
+
+    .rule-box {
+      margin-top: 10px; padding: 12px 16px; border-radius: 14px; text-align: center;
+      background: linear-gradient(180deg, #f5f0ff, #ece5ff); border: 2px solid var(--purple-200);
+      font-size: clamp(.9rem, 2.2vw, 1.05rem); display: none;
+    }
+    .rule-box.visible { display: block; animation: fadeIn 300ms ease; }
+    .rule-box .rule-owl { font-size: 1.6rem; vertical-align: middle; }
+    .rule-box .rule-text { margin-top: 4px; line-height: 1.45; }
+    .rule-box strong { color: var(--purple-600); }
+
+    /* Results / celebration */
+    .result-stars { font-size: clamp(2rem, 8vw, 3.5rem); text-align: center; margin: 12px 0; letter-spacing: 6px; }
+    .result-msg { text-align: center; font-size: clamp(1.1rem, 3vw, 1.4rem); font-weight: 700; margin: 8px 0; }
+    .score-summary { text-align: center; font-size: 1.05rem; margin: 8px 0; }
+    .big-owl { font-size: clamp(80px, 18vw, 120px); text-align: center; display: block;
+      animation: owlBounce 2s ease-in-out infinite; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.12)); }
+
+    /* Confetti canvas overlay */
+    #confettiCanvas {
+      position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    }
+
+    /* Responsive */
+    @media (max-width: 500px) {
+      .levels-grid { grid-template-columns: 1fr; }
+      .choices { grid-template-columns: 1fr; max-width: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating sparkles background -->
+  <div class="sparkles" id="sparkles"></div>
+  <a href="../index.html" class="top-btn home-btn" aria-label="Torna ai giochi" title="Tutti i giochi">🏠</a>
+  <button class="top-btn mute-btn" id="muteBtn" onclick="toggleMute()" aria-label="Attiva suono">🔇</button>
+
+  <!-- Confetti overlay -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <main>
+    <!-- ====== TITLE SCREEN ====== -->
+    <div class="screen active" id="titleScreen">
+      <div class="owl-wrap"><span class="owl" aria-hidden="true">🦉</span></div>
+      <h1>La Magia dell'Acca ✨</h1>
+      <p class="subtitle">Impara quando serve la <strong>H</strong> e quando serve l'accento su <strong>è</strong>!</p>
+
+      <div class="name-row" style="text-align:center;">
+        <label for="nameInput">Come ti chiami?</label>
+        <input class="name-input" id="nameInput" type="text" maxlength="20" placeholder="Il tuo nome..." autocomplete="off" style="margin:0 auto; display:block;">
+      </div>
+
+      <div class="btn-row">
+        <button class="primary-btn" id="startBtn" onclick="goToLevels()">GIOCA! 🦉</button>
+      </div>
+    </div>
+
+    <!-- ====== LEVEL SELECT ====== -->
+    <div class="screen" id="levelScreen">
+      <h1>Scegli il Livello 📚</h1>
+      <p class="subtitle" id="levelGreeting"></p>
+      <div class="levels-grid" id="levelsGrid"></div>
+      <div class="btn-row">
+        <button class="secondary-btn" onclick="showScreen('titleScreen')">⬅ Indietro</button>
+      </div>
+    </div>
+
+    <!-- ====== GAME SCREEN ====== -->
+    <div class="screen" id="gameScreen">
+      <div class="game-top">
+        <div class="hud-box" id="hudLevel">Livello 1</div>
+        <div class="hud-box" id="hudScore">⭐ 0</div>
+      </div>
+
+      <div class="progress-dots" id="progressDots"></div>
+
+      <div class="question-card">
+        <div class="question-label" id="questionLabel">Scegli la parola giusta:</div>
+        <div class="sentence" id="sentence"></div>
+      </div>
+
+      <div class="choices" id="choices">
+        <button class="choice-btn" id="choiceA" onclick="pickAnswer(0)"></button>
+        <button class="choice-btn" id="choiceB" onclick="pickAnswer(1)"></button>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+      <div class="rule-box" id="ruleBox">
+        <span class="rule-owl">🦉</span>
+        <div class="rule-text" id="ruleText"></div>
+      </div>
+
+      <div class="btn-row" id="nextRow" style="display:none;">
+        <button class="primary-btn" id="nextBtn" onclick="nextQuestion()">Avanti ➡</button>
+      </div>
+    </div>
+
+    <!-- ====== LEVEL COMPLETE ====== -->
+    <div class="screen" id="resultScreen">
+      <span class="big-owl" aria-hidden="true">🦉</span>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="result-stars" id="resultStars"></div>
+      <div class="score-summary" id="resultSummary"></div>
+      <div class="btn-row">
+        <button class="secondary-btn" onclick="goToLevels()">📚 Livelli</button>
+        <button class="primary-btn" id="nextLevelBtn" onclick="startNextLevel()">Prossimo Livello ➡</button>
+      </div>
+    </div>
+
+    <!-- ====== ALL COMPLETE ====== -->
+    <div class="screen" id="winScreen">
+      <span class="big-owl" aria-hidden="true">🦉</span>
+      <h1>Sei un Mago dell'Acca! 🎉</h1>
+      <div class="result-stars" id="winStars"></div>
+      <div class="result-msg" id="winMsg"></div>
+      <div class="btn-row">
+        <button class="primary-btn" onclick="goToLevels()">🔄 Gioca Ancora</button>
+      </div>
+    </div>
+  </main>
+
+<script>
+// ============================================================
+// LA MAGIA DELL'ACCA — Italian H / accent quiz game
+// ============================================================
+
+// ---- Question bank ----
+// Each question: { sentence (with ___ for gap), answer, wrong, rule }
+const LEVELS = [
+  {
+    id: 0,
+    title: "HO oppure O?",
+    emoji: "1️⃣",
+    pairs: ["ho", "o"],
+    rule: "Se puoi sostituire con <strong>\"possedere\"</strong> o <strong>\"aver fatto qualcosa\"</strong>, è il verbo <strong>avere</strong> → scrivi <strong>HO</strong> (con la H).<br>Se significa <strong>\"oppure\"</strong> → scrivi <strong>O</strong> (senza H).",
+    questions: [
+      // AVERE — possesso
+      { sentence: "___ fame!", answer: "Ho", wrong: "O", hint: "Sento fame = verbo avere → Ho" },
+      { sentence: "___ un gatto a casa.", answer: "Ho", wrong: "O", hint: "Possiedo un gatto = verbo avere → Ho" },
+      { sentence: "___ sete, voglio l'acqua!", answer: "Ho", wrong: "O", hint: "Sento sete = verbo avere → Ho" },
+      { sentence: "___ tanti amici a scuola.", answer: "Ho", wrong: "O", hint: "Possiedo tanti amici → Ho" },
+      { sentence: "___ freddo, mi metto la giacca.", answer: "Ho", wrong: "O", hint: "Sento freddo = verbo avere → Ho" },
+      { sentence: "___ un nuovo libro da leggere.", answer: "Ho", wrong: "O", hint: "Possiedo un libro → Ho" },
+      { sentence: "___ sonno, vado a dormire.", answer: "Ho", wrong: "O", hint: "Sento sonno = verbo avere → Ho" },
+      { sentence: "___ paura del buio!", answer: "Ho", wrong: "O", hint: "Sento paura = verbo avere → Ho" },
+      // AVERE — passato prossimo
+      { sentence: "___ perso il mio zaino!", answer: "Ho", wrong: "O", hint: "Ho fatto qualcosa (perdere) → Ho" },
+      { sentence: "___ visto un arcobaleno!", answer: "Ho", wrong: "O", hint: "Ho fatto qualcosa (vedere) → Ho" },
+      { sentence: "___ disegnato una farfalla.", answer: "Ho", wrong: "O", hint: "Ho fatto qualcosa (disegnare) → Ho" },
+      { sentence: "___ mangiato tutta la minestra!", answer: "Ho", wrong: "O", hint: "Ho fatto qualcosa (mangiare) → Ho" },
+      { sentence: "___ trovato una conchiglia!", answer: "Ho", wrong: "O", hint: "Ho fatto qualcosa (trovare) → Ho" },
+      // OPPURE
+      { sentence: "Vuoi il gelato ___ la torta?", answer: "o", wrong: "ho", hint: "Significa \"oppure\" → o" },
+      { sentence: "Preferisci leggere ___ giocare?", answer: "o", wrong: "ho", hint: "Significa \"oppure\" → o" },
+      { sentence: "Andiamo al mare ___ in montagna?", answer: "o", wrong: "ho", hint: "Significa \"oppure\" → o" },
+      { sentence: "Ti piace la pizza ___ la pasta?", answer: "o", wrong: "ho", hint: "Significa \"oppure\" → o" },
+      { sentence: "Vuoi colorare ___ ritagliare?", answer: "o", wrong: "ho", hint: "Significa \"oppure\" → o" },
+      { sentence: "Prendi la mela ___ la banana?", answer: "o", wrong: "ho", hint: "Significa \"oppure\" → o" },
+      { sentence: "Giochiamo dentro ___ fuori?", answer: "o", wrong: "ho", hint: "Significa \"oppure\" → o" },
+      { sentence: "Meglio la bici ___ il monopattino?", answer: "o", wrong: "ho", hint: "Significa \"oppure\" → o" },
+      { sentence: "Viene Marco ___ Giulia?", answer: "o", wrong: "ho", hint: "Significa \"oppure\" → o" },
+    ]
+  },
+  {
+    id: 1,
+    title: "HA oppure A?",
+    emoji: "2️⃣",
+    pairs: ["ha", "a"],
+    rule: "Se puoi sostituire con <strong>\"possiede\"</strong>, <strong>\"sente\"</strong> o <strong>\"ha fatto qualcosa\"</strong>, è il verbo <strong>avere</strong> → scrivi <strong>HA</strong> (con la H).<br>Se indica <strong>un luogo</strong>, <strong>a chi</strong> o <strong>a fare cosa</strong> → scrivi <strong>A</strong> (senza H).",
+    questions: [
+      // AVERE — possesso
+      { sentence: "Marco ___ un cane.", answer: "ha", wrong: "a", hint: "Marco possiede un cane → ha" },
+      { sentence: "Sofia ___ un vestito nuovo.", answer: "ha", wrong: "a", hint: "Sofia possiede un vestito → ha" },
+      { sentence: "Il gatto ___ fame.", answer: "ha", wrong: "a", hint: "Il gatto sente la fame → ha" },
+      { sentence: "La nonna ___ gli occhiali.", answer: "ha", wrong: "a", hint: "La nonna possiede gli occhiali → ha" },
+      { sentence: "Luca ___ tanti giocattoli.", answer: "ha", wrong: "a", hint: "Luca possiede tanti giocattoli → ha" },
+      { sentence: "Il cane ___ il pelo morbido.", answer: "ha", wrong: "a", hint: "Il cane possiede il pelo morbido → ha" },
+      { sentence: "La maestra ___ un bel sorriso.", answer: "ha", wrong: "a", hint: "La maestra possiede un bel sorriso → ha" },
+      { sentence: "Questa storia ___ un lieto fine.", answer: "ha", wrong: "a", hint: "La storia possiede un lieto fine → ha" },
+      // AVERE — passato prossimo
+      { sentence: "La mamma ___ cucinato la pasta.", answer: "ha", wrong: "a", hint: "La mamma ha fatto qualcosa → ha" },
+      { sentence: "Il papà ___ lavato la macchina.", answer: "ha", wrong: "a", hint: "Il papà ha fatto qualcosa → ha" },
+      { sentence: "Sara ___ letto un libro intero.", answer: "ha", wrong: "a", hint: "Sara ha fatto qualcosa (leggere) → ha" },
+      { sentence: "Chi ___ rotto il vaso?", answer: "ha", wrong: "a", hint: "Chi ha fatto qualcosa (rompere) → ha" },
+      // PREPOSIZIONE — luogo
+      { sentence: "Vado ___ scuola.", answer: "a", wrong: "ha", hint: "Vado dove? A scuola (luogo) → a" },
+      { sentence: "Andiamo ___ casa!", answer: "a", wrong: "ha", hint: "Andiamo dove? A casa (luogo) → a" },
+      { sentence: "Torno ___ casa presto.", answer: "a", wrong: "ha", hint: "Torno dove? A casa (luogo) → a" },
+      { sentence: "Corri ___ prendere il pallone!", answer: "a", wrong: "ha", hint: "A fare cosa? → a" },
+      { sentence: "Gioco ___ pallone nel parco.", answer: "a", wrong: "ha", hint: "Gioco a che cosa? (a + gioco) → a" },
+      { sentence: "Siamo andati ___ Roma.", answer: "a", wrong: "ha", hint: "Dove? A Roma (luogo) → a" },
+      { sentence: "Vieni ___ giocare con me?", answer: "a", wrong: "ha", hint: "A fare cosa? → a" },
+      { sentence: "Resto ___ dormire dalla nonna.", answer: "a", wrong: "ha", hint: "A fare cosa? → a" },
+      { sentence: "Corriamo ___ nasconderci!", answer: "a", wrong: "ha", hint: "A fare cosa? → a" },
+    ]
+  },
+  {
+    id: 2,
+    title: "HAI oppure AI?",
+    emoji: "3️⃣",
+    pairs: ["hai", "ai"],
+    rule: "Se puoi dire <strong>\"tu possiedi\"</strong> o <strong>\"tu hai fatto\"</strong>, è il verbo <strong>avere</strong> → scrivi <strong>HAI</strong> (con la H).<br>Se significa <strong>\"a + i\"</strong> (\"ai bambini\", \"ai nonni\") → scrivi <strong>AI</strong> (senza H).",
+    questions: [
+      // AVERE — possesso
+      { sentence: "___ un bel sorriso!", answer: "Hai", wrong: "Ai", hint: "Tu possiedi un bel sorriso → Hai" },
+      { sentence: "___ gli occhi azzurri.", answer: "Hai", wrong: "Ai", hint: "Tu possiedi gli occhi azzurri → Hai" },
+      { sentence: "___ una bici rossa?", answer: "Hai", wrong: "Ai", hint: "Tu possiedi una bici? → Hai" },
+      { sentence: "___ ragione tu!", answer: "Hai", wrong: "Ai", hint: "Tu possiedi ragione → Hai" },
+      { sentence: "___ tanti pennarelli colorati.", answer: "Hai", wrong: "Ai", hint: "Tu possiedi pennarelli → Hai" },
+      { sentence: "___ paura dei ragni?", answer: "Hai", wrong: "Ai", hint: "Tu senti paura? → Hai" },
+      { sentence: "___ freddo? Prendi la coperta.", answer: "Hai", wrong: "Ai", hint: "Tu senti freddo? → Hai" },
+      // AVERE — passato prossimo
+      { sentence: "___ fatto i compiti?", answer: "Hai", wrong: "Ai", hint: "Tu hai fatto qualcosa → Hai" },
+      { sentence: "___ visto quel film?", answer: "Hai", wrong: "Ai", hint: "Tu hai fatto qualcosa (vedere) → Hai" },
+      { sentence: "___ mangiato tutto!", answer: "Hai", wrong: "Ai", hint: "Tu hai fatto qualcosa (mangiare) → Hai" },
+      { sentence: "___ dormito bene stanotte?", answer: "Hai", wrong: "Ai", hint: "Tu hai fatto qualcosa (dormire) → Hai" },
+      { sentence: "___ studiato per la verifica?", answer: "Hai", wrong: "Ai", hint: "Tu hai fatto qualcosa (studiare) → Hai" },
+      // PREPOSIZIONE — a + i
+      { sentence: "Dai le caramelle ___ bambini.", answer: "ai", wrong: "hai", hint: "A chi? Ai bambini (a + i) → ai" },
+      { sentence: "Racconta la storia ___ tuoi amici.", answer: "ai", wrong: "hai", hint: "A chi? Ai tuoi amici → ai" },
+      { sentence: "Penso ___ miei nonni.", answer: "ai", wrong: "hai", hint: "A chi penso? Ai miei nonni → ai" },
+      { sentence: "Scrivi una lettera ___ tuoi cugini.", answer: "ai", wrong: "hai", hint: "A chi? Ai tuoi cugini → ai" },
+      { sentence: "Porta i biscotti ___ compagni.", answer: "ai", wrong: "hai", hint: "A chi? Ai compagni → ai" },
+      { sentence: "Dillo ___ genitori!", answer: "ai", wrong: "hai", hint: "A chi? Ai genitori (a + i) → ai" },
+      { sentence: "Piace tanto ___ miei fratelli.", answer: "ai", wrong: "hai", hint: "A chi piace? Ai fratelli → ai" },
+      { sentence: "Regala un fiore ___ vicini.", answer: "ai", wrong: "hai", hint: "A chi? Ai vicini → ai" },
+    ]
+  },
+  {
+    id: 3,
+    title: "HANNO oppure ANNO?",
+    emoji: "4️⃣",
+    pairs: ["hanno", "anno"],
+    rule: "Se puoi dire <strong>\"loro possiedono\"</strong> o <strong>\"loro hanno fatto\"</strong>, è il verbo <strong>avere</strong> → scrivi <strong>HANNO</strong> (con la H).<br>Se parla di <strong>365 giorni</strong>, di un <strong>periodo di tempo</strong> → scrivi <strong>ANNO</strong> (senza H).",
+    questions: [
+      // AVERE — possesso
+      { sentence: "Le farfalle ___ ali colorate.", answer: "hanno", wrong: "anno", hint: "Le farfalle possiedono le ali → hanno" },
+      { sentence: "I miei amici ___ un segreto.", answer: "hanno", wrong: "anno", hint: "Loro possiedono un segreto → hanno" },
+      { sentence: "I gatti ___ le zampe morbide.", answer: "hanno", wrong: "anno", hint: "I gatti possiedono le zampe → hanno" },
+      { sentence: "Le stelle ___ una luce bellissima.", answer: "hanno", wrong: "anno", hint: "Le stelle possiedono luce → hanno" },
+      { sentence: "I miei genitori ___ una macchina blu.", answer: "hanno", wrong: "anno", hint: "Loro possiedono una macchina → hanno" },
+      { sentence: "Le api ___ le ali piccole.", answer: "hanno", wrong: "anno", hint: "Le api possiedono le ali → hanno" },
+      { sentence: "I bambini ___ tanta energia!", answer: "hanno", wrong: "anno", hint: "I bambini possiedono energia → hanno" },
+      // AVERE — passato prossimo
+      { sentence: "I bambini ___ giocato in giardino.", answer: "hanno", wrong: "anno", hint: "Loro hanno fatto qualcosa (giocare) → hanno" },
+      { sentence: "___ trovato un tesoro!", answer: "Hanno", wrong: "Anno", hint: "Loro hanno fatto qualcosa (trovare) → Hanno" },
+      { sentence: "Le maestre ___ organizzato una festa.", answer: "hanno", wrong: "anno", hint: "Loro hanno fatto qualcosa → hanno" },
+      { sentence: "I nonni ___ portato i regali.", answer: "hanno", wrong: "anno", hint: "Loro hanno fatto qualcosa → hanno" },
+      { sentence: "Le squadre ___ giocato bene.", answer: "hanno", wrong: "anno", hint: "Loro hanno fatto qualcosa → hanno" },
+      // PERIODO DI TEMPO
+      { sentence: "Quest'___ vado in terza!", answer: "anno", wrong: "hanno", hint: "Quest'anno = periodo di 365 giorni → anno" },
+      { sentence: "Buon ___ nuovo!", answer: "anno", wrong: "hanno", hint: "Periodo di tempo, capodanno → anno" },
+      { sentence: "L'___ scorso sono andato al mare.", answer: "anno", wrong: "hanno", hint: "L'anno scorso = periodo di tempo → anno" },
+      { sentence: "Ogni ___ festeggiamo il Natale.", answer: "anno", wrong: "hanno", hint: "Ogni anno = ogni 365 giorni → anno" },
+      { sentence: "Il prossimo ___ cambierò scuola.", answer: "anno", wrong: "hanno", hint: "Prossimo anno = periodo di tempo → anno" },
+      { sentence: "Un ___ ha dodici mesi.", answer: "anno", wrong: "hanno", hint: "365 giorni = anno → anno" },
+      { sentence: "Che ___ sei nato?", answer: "anno", wrong: "hanno", hint: "In che anno? Periodo di tempo → anno" },
+      { sentence: "Fra un ___ avrò otto ___ .", answer: "anno", wrong: "hanno", hint: "Periodo di tempo → anno" },
+    ]
+  },
+  {
+    id: 4,
+    title: "È oppure E?",
+    emoji: "5️⃣",
+    pairs: ["è", "e"],
+    rule: "Se puoi sostituire con <strong>\"era\"</strong>, è il verbo <strong>essere</strong> → scrivi <strong>È</strong> (con l'accento grave: <strong>è</strong>).<br>Se significa <strong>\"e anche\" / \"insieme a\"</strong> → scrivi <strong>E</strong> (senza accento).",
+    questions: [
+      // ESSERE
+      { sentence: "Marco ___ simpatico.", answer: "è", wrong: "e", hint: "Marco era simpatico → è (verbo essere)" },
+      { sentence: "Oggi ___ una bella giornata!", answer: "è", wrong: "e", hint: "Oggi era una bella giornata → è" },
+      { sentence: "Chi ___ alla porta?", answer: "è", wrong: "e", hint: "Chi era alla porta? → è" },
+      { sentence: "La pizza ___ buonissima!", answer: "è", wrong: "e", hint: "La pizza era buonissima → è" },
+      { sentence: "Questo libro ___ molto divertente.", answer: "è", wrong: "e", hint: "Il libro era divertente → è" },
+      { sentence: "La maestra ___ gentile.", answer: "è", wrong: "e", hint: "La maestra era gentile → è" },
+      { sentence: "Il cielo ___ azzurro oggi.", answer: "è", wrong: "e", hint: "Il cielo era azzurro → è" },
+      { sentence: "Il mio gatto ___ bianco e nero.", answer: "è", wrong: "e", hint: "Il gatto era bianco → è" },
+      { sentence: "L'acqua ___ fredda!", answer: "è", wrong: "e", hint: "L'acqua era fredda → è" },
+      { sentence: "Dove ___ il mio quaderno?", answer: "è", wrong: "e", hint: "Dove era il quaderno? → è" },
+      { sentence: "Non ___ facile questo esercizio!", answer: "è", wrong: "e", hint: "Non era facile → è" },
+      // CONGIUNZIONE
+      { sentence: "Prendi pane ___ latte.", answer: "e", wrong: "è", hint: "Pane insieme a latte → e (congiunzione)" },
+      { sentence: "Ho un gatto ___ un cane.", answer: "e", wrong: "è", hint: "Un gatto insieme a un cane → e" },
+      { sentence: "Mamma ___ papà sono usciti.", answer: "e", wrong: "è", hint: "Mamma insieme a papà → e" },
+      { sentence: "Studio italiano ___ matematica.", answer: "e", wrong: "è", hint: "Italiano insieme a matematica → e" },
+      { sentence: "Compro matite ___ colori.", answer: "e", wrong: "è", hint: "Matite insieme a colori → e" },
+      { sentence: "Mi piacciono le fragole ___ le ciliegie.", answer: "e", wrong: "è", hint: "Fragole insieme a ciliegie → e" },
+      { sentence: "Ho visto Anna ___ Luca al parco.", answer: "e", wrong: "è", hint: "Anna insieme a Luca → e" },
+      { sentence: "Mangio riso ___ pollo.", answer: "e", wrong: "è", hint: "Riso insieme a pollo → e" },
+      { sentence: "Disegno fiori ___ alberi.", answer: "e", wrong: "è", hint: "Fiori insieme a alberi → e" },
+      { sentence: "Luna ___ Sole sono nel cielo.", answer: "e", wrong: "è", hint: "Luna insieme a Sole → e" },
+    ]
+  },
+  {
+    id: 5,
+    title: "MISTO! 🎭",
+    emoji: "🌟",
+    pairs: null,
+    rule: "Ricorda i trucchi:<br>• <strong>Verbo avere</strong> (possedere, sentire, aver fatto) → <strong>con la H</strong><br>• <strong>Verbo essere</strong> (sostituisci con \"era\") → <strong>è con l'accento</strong><br>• Tutto il resto → <strong>senza H e senza accento!</strong>",
+    questions: [] // filled dynamically from other levels
+  }
+];
+
+// ---- Game state ----
+let playerName = "";
+let currentLevel = 0;
+let currentQuestion = 0;
+let attempts = 0;
+let levelScore = 0;
+let totalStars = 0;
+const QUESTIONS_PER_LEVEL = 8;
+const levelResults = []; // array of {stars, completed} per level
+let currentQuestions = []; // shuffled for current play-through
+
+// Init level results
+for (let i = 0; i < LEVELS.length; i++) {
+  levelResults.push({ stars: 0, completed: false });
+}
+
+// ---- Persistence ----
+const SAVE_KEY = "acca_progress_v1";
+const NAME_KEY = "acca_name";
+
+function saveProgress() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(levelResults));
+    localStorage.setItem(NAME_KEY, playerName);
+  } catch (_) {}
+}
+
+function loadProgress() {
+  try {
+    const saved = localStorage.getItem(SAVE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      data.forEach((r, i) => {
+        if (i < levelResults.length) {
+          levelResults[i].stars = r.stars || 0;
+          levelResults[i].completed = !!r.completed;
+        }
+      });
+      totalStars = levelResults.reduce((s, r) => s + r.stars, 0);
+    }
+    const savedName = localStorage.getItem(NAME_KEY);
+    if (savedName) {
+      playerName = savedName;
+      document.getElementById("nameInput").value = savedName;
+    }
+  } catch (_) {}
+}
+
+// ---- Audio engine ----
+let audioCtx = null;
+let soundEnabled = false;
+
+function ensureAudioContext() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+
+function toggleMute() {
+  soundEnabled = !soundEnabled;
+  document.getElementById("muteBtn").textContent = soundEnabled ? "🔊" : "🔇";
+  document.getElementById("muteBtn").setAttribute("aria-label", soundEnabled ? "Disattiva suono" : "Attiva suono");
+  if (soundEnabled) { ensureAudioContext(); playSound("click"); }
+  else if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+}
+
+function playTone(freq, duration, type = "sine", volume = 0.18, delay = 0) {
+  if (!soundEnabled || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, audioCtx.currentTime + delay);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(audioCtx.currentTime + delay);
+  osc.stop(audioCtx.currentTime + delay + duration);
+}
+
+function playSound(name) {
+  if (!soundEnabled) return;
+  ensureAudioContext();
+  switch (name) {
+    case "click": playTone(880, 0.08, "sine", 0.10); break;
+    case "correct":
+      playTone(523, 0.15, "sine", 0.18, 0);
+      playTone(659, 0.22, "sine", 0.18, 0.12);
+      break;
+    case "wrong": playTone(280, 0.25, "triangle", 0.12); break;
+    case "fanfare":
+      playTone(523, 0.18, "sine", 0.16, 0);
+      playTone(659, 0.18, "sine", 0.16, 0.14);
+      playTone(784, 0.18, "sine", 0.16, 0.28);
+      playTone(1047, 0.35, "sine", 0.20, 0.42);
+      break;
+    case "perfect":
+      playTone(523, 0.14, "sine", 0.16, 0);
+      playTone(659, 0.14, "sine", 0.16, 0.11);
+      playTone(784, 0.14, "sine", 0.16, 0.22);
+      playTone(1047, 0.20, "sine", 0.18, 0.33);
+      playTone(1175, 0.14, "sine", 0.14, 0.50);
+      playTone(1319, 0.40, "sine", 0.20, 0.62);
+      break;
+  }
+}
+
+function speak(text) {
+  if (!soundEnabled || !("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "it-IT"; u.rate = 0.85; u.pitch = 1.05;
+  window.speechSynthesis.speak(u);
+}
+
+// ---- Sparkles background ----
+(function initSparkles() {
+  const container = document.getElementById("sparkles");
+  const symbols = ["✨","⭐","🌟","💫","📖","🔮"];
+  for (let i = 0; i < 18; i++) {
+    const s = document.createElement("span");
+    s.className = "sparkle";
+    s.textContent = symbols[i % symbols.length];
+    s.style.left = Math.random() * 100 + "%";
+    s.style.fontSize = (14 + Math.random() * 18) + "px";
+    s.style.animationDuration = (7 + Math.random() * 10) + "s";
+    s.style.animationDelay = (Math.random() * 10) + "s";
+    container.appendChild(s);
+  }
+})();
+
+// ---- Confetti system ----
+const confettiCanvas = document.getElementById("confettiCanvas");
+const confettiCtx = confettiCanvas.getContext("2d");
+let confettiParticles = [];
+let confettiAnim = null;
+
+function resizeConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeConfetti);
+resizeConfetti();
+
+function spawnConfetti(count = 80) {
+  const colors = ["#f59e0b","#7c3aed","#34d399","#f472b6","#3b82f6","#ef4444","#fbbf24","#10b981"];
+  for (let i = 0; i < count; i++) {
+    confettiParticles.push({
+      x: Math.random() * confettiCanvas.width,
+      y: -20 - Math.random() * 60,
+      vx: (Math.random() - 0.5) * 6,
+      vy: 2 + Math.random() * 4,
+      size: 5 + Math.random() * 8,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 12,
+      life: 1
+    });
+  }
+  if (!confettiAnim) animateConfetti();
+}
+
+function animateConfetti() {
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  confettiParticles.forEach(p => {
+    p.x += p.vx;
+    p.vy += 0.08;
+    p.y += p.vy;
+    p.rotation += p.rotSpeed;
+    p.life -= 0.005;
+    if (p.life <= 0) return;
+    confettiCtx.save();
+    confettiCtx.translate(p.x, p.y);
+    confettiCtx.rotate(p.rotation * Math.PI / 180);
+    confettiCtx.globalAlpha = Math.max(0, p.life);
+    confettiCtx.fillStyle = p.color;
+    confettiCtx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+    confettiCtx.restore();
+  });
+  confettiParticles = confettiParticles.filter(p => p.life > 0 && p.y < confettiCanvas.height + 50);
+  if (confettiParticles.length > 0) {
+    confettiAnim = requestAnimationFrame(animateConfetti);
+  } else {
+    confettiAnim = null;
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  }
+}
+
+// ---- Floating text ----
+let floatingTexts = [];
+function spawnFloat(text, x, y) {
+  const el = document.createElement("div");
+  el.textContent = text;
+  el.style.cssText = `position:fixed;left:${x}px;top:${y}px;font-size:1.6rem;font-weight:800;
+    color:#f59e0b;pointer-events:none;z-index:200;transition:all 1.2s ease-out;`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => {
+    el.style.transform = "translateY(-60px)";
+    el.style.opacity = "0";
+  });
+  setTimeout(() => el.remove(), 1300);
+}
+
+// ---- Navigation ----
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function goToLevels() {
+  playerName = document.getElementById("nameInput").value.trim() || "Amico";
+  saveProgress();
+  const greeting = document.getElementById("levelGreeting");
+  greeting.textContent = `Ciao ${playerName}! Scegli un livello da giocare.`;
+  renderLevelButtons();
+  showScreen("levelScreen");
+}
+
+function renderLevelButtons() {
+  const grid = document.getElementById("levelsGrid");
+  grid.innerHTML = "";
+  LEVELS.forEach((lvl, i) => {
+    const btn = document.createElement("button");
+    btn.className = "level-btn" + (levelResults[i].completed ? " completed" : "");
+    // Unlock logic: level 0 always unlocked, others need previous completed
+    const unlocked = i === 0 || levelResults[i - 1].completed;
+    btn.disabled = !unlocked;
+
+    const starsEarned = levelResults[i].stars;
+    const starStr = starsEarned > 0 ? "⭐".repeat(starsEarned) + "☆".repeat(Math.max(0, 24 - starsEarned)) : "";
+    // Show simpler star summary
+    const maxStars = QUESTIONS_PER_LEVEL * 3;
+    const starSummary = starsEarned > 0 ? `⭐ ${starsEarned}/${maxStars}` : (unlocked ? "Non ancora giocato" : "🔒");
+
+    btn.innerHTML = `<span class="level-num">${lvl.emoji}</span>
+      <span class="level-title">${lvl.title}</span>
+      <span class="level-stars">${starSummary}</span>`;
+    btn.onclick = () => startLevel(i);
+    grid.appendChild(btn);
+  });
+}
+
+// ---- Level start ----
+function startLevel(levelIndex) {
+  currentLevel = levelIndex;
+  currentQuestion = 0;
+  levelScore = 0;
+  attempts = 0;
+
+  // Build question list
+  if (LEVELS[levelIndex].pairs === null) {
+    // Mixed level: pick 2 random from each of the first 4 levels + some è/e
+    const pool = [];
+    for (let i = 0; i < 5; i++) {
+      const qs = [...LEVELS[i].questions];
+      shuffle(qs);
+      pool.push(...qs.slice(0, 2));
+    }
+    shuffle(pool);
+    currentQuestions = pool.slice(0, QUESTIONS_PER_LEVEL);
+  } else {
+    currentQuestions = [...LEVELS[levelIndex].questions];
+    shuffle(currentQuestions);
+    currentQuestions = currentQuestions.slice(0, QUESTIONS_PER_LEVEL);
+  }
+
+  document.getElementById("hudLevel").textContent = `Livello ${levelIndex + 1}`;
+  document.getElementById("hudScore").textContent = "⭐ 0";
+
+  showScreen("gameScreen");
+  renderProgressDots();
+  showQuestion();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+// ---- Question rendering ----
+function renderProgressDots() {
+  const container = document.getElementById("progressDots");
+  container.innerHTML = "";
+  for (let i = 0; i < currentQuestions.length; i++) {
+    const dot = document.createElement("span");
+    dot.className = "dot" + (i === currentQuestion ? " current" : "");
+    dot.id = "dot-" + i;
+    dot.textContent = i + 1;
+    container.appendChild(dot);
+  }
+}
+
+function showQuestion() {
+  attempts = 0;
+  const q = currentQuestions[currentQuestion];
+  const sentenceEl = document.getElementById("sentence");
+  const gapText = "______";
+
+  // Build sentence with visual gap
+  const parts = q.sentence.split("___");
+  sentenceEl.innerHTML = escapeHtml(parts[0]) + `<span class="gap">${gapText}</span>` + escapeHtml(parts[1] || "");
+
+  // Randomly order the two options
+  const options = [q.answer, q.wrong];
+  if (Math.random() > 0.5) options.reverse();
+  document.getElementById("choiceA").textContent = options[0];
+  document.getElementById("choiceB").textContent = options[1];
+  document.getElementById("choiceA").className = "choice-btn";
+  document.getElementById("choiceB").className = "choice-btn";
+  document.getElementById("choiceA").disabled = false;
+  document.getElementById("choiceB").disabled = false;
+
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("feedback").className = "feedback";
+  document.getElementById("ruleBox").className = "rule-box";
+  document.getElementById("nextRow").style.display = "none";
+
+  // Update question label based on level
+  const lvl = LEVELS[currentLevel];
+  if (lvl.pairs) {
+    document.getElementById("questionLabel").textContent = `${lvl.pairs[0].toUpperCase()} oppure ${lvl.pairs[1].toUpperCase()}?`;
+  } else {
+    document.getElementById("questionLabel").textContent = "Scegli la parola giusta:";
+  }
+
+  // Update progress dots
+  renderProgressDots();
+
+  // Speak sentence
+  const spoken = q.sentence.replace("___", "... spazio ...");
+  setTimeout(() => speak(spoken), 300);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ---- Answer handling ----
+function pickAnswer(btnIndex) {
+  const q = currentQuestions[currentQuestion];
+  const choiceA = document.getElementById("choiceA");
+  const choiceB = document.getElementById("choiceB");
+  const picked = btnIndex === 0 ? choiceA.textContent : choiceB.textContent;
+  const pickedBtn = btnIndex === 0 ? choiceA : choiceB;
+  const otherBtn = btnIndex === 0 ? choiceB : choiceA;
+
+  // Already answered correctly
+  if (pickedBtn.disabled && pickedBtn.classList.contains("correct-pick")) return;
+
+  attempts++;
+
+  const isCorrect = picked.toLowerCase() === q.answer.toLowerCase();
+
+  if (isCorrect) {
+    handleCorrect(pickedBtn, otherBtn, q);
+  } else {
+    handleWrong(pickedBtn, q);
+  }
+}
+
+function handleCorrect(pickedBtn, otherBtn, q) {
+  pickedBtn.classList.add("correct-pick");
+  pickedBtn.disabled = true;
+  otherBtn.disabled = true;
+
+  const starsEarned = attempts === 1 ? 3 : attempts === 2 ? 2 : 1;
+  levelScore += starsEarned;
+
+  // Update HUD with animation
+  const hudScore = document.getElementById("hudScore");
+  hudScore.textContent = `⭐ ${levelScore}`;
+  hudScore.classList.add("pop");
+  setTimeout(() => hudScore.classList.remove("pop"), 300);
+
+  // Update dot
+  const dot = document.getElementById("dot-" + currentQuestion);
+  if (dot) { dot.classList.remove("current"); dot.classList.add("correct"); dot.textContent = "⭐".repeat(Math.min(starsEarned, 3)); dot.style.fontSize = ".6rem"; }
+
+  // Fill in the gap with the answer
+  const gapEl = document.querySelector(".sentence .gap");
+  if (gapEl) { gapEl.textContent = q.answer; gapEl.style.color = "var(--good)"; gapEl.style.borderColor = "var(--good)"; }
+
+  // Feedback
+  const feedbackEl = document.getElementById("feedback");
+  const praises = ["Bravissimo! 🌟", "Fantastico! ✨", "Perfetto! ⭐", "Grande! 🎉", "Che stella! 💫", "Esatto! 🦉"];
+  feedbackEl.textContent = praises[Math.floor(Math.random() * praises.length)];
+  feedbackEl.className = "feedback good";
+
+  playSound("correct");
+
+  // Floating stars
+  const rect = pickedBtn.getBoundingClientRect();
+  for (let i = 0; i < starsEarned; i++) {
+    setTimeout(() => spawnFloat("⭐", rect.left + rect.width/2 + (i-1)*20, rect.top), i * 150);
+  }
+
+  // If first try on easier levels, mini confetti
+  if (attempts === 1) spawnConfetti(25);
+
+  // Speak praise
+  const spokenPraise = ["Bravissimo!", "Fantastico!", "Perfetto!", "Grande!", "Esatto!"];
+  speak(spokenPraise[Math.floor(Math.random() * spokenPraise.length)]);
+
+  // Auto-advance after a short celebration pause
+  setTimeout(() => nextQuestion(), 1200);
+}
+
+function handleWrong(pickedBtn, q) {
+  pickedBtn.classList.add("wrong-pick");
+  setTimeout(() => pickedBtn.classList.remove("wrong-pick"), 500);
+
+  const feedbackEl = document.getElementById("feedback");
+  const encouragements = ["Quasi! Riprova! 💪", "Ci sei quasi! 🤔", "Non ti preoccupare, riprova!", "Dai, prova ancora! 🦉"];
+  feedbackEl.textContent = encouragements[Math.floor(Math.random() * encouragements.length)];
+  feedbackEl.className = "feedback bad";
+
+  playSound("wrong");
+
+  // After 2 wrong attempts, show the rule hint
+  if (attempts >= 2) {
+    const ruleBox = document.getElementById("ruleBox");
+    const ruleText = document.getElementById("ruleText");
+    ruleText.innerHTML = `<strong>💡 Suggerimento:</strong> ${q.hint}`;
+    ruleBox.className = "rule-box visible";
+    speak(q.hint);
+
+    // After 3 attempts, auto-reveal
+    if (attempts >= 3) {
+      revealCorrect(q);
+    }
+  }
+}
+
+function revealCorrect(q) {
+  const choiceA = document.getElementById("choiceA");
+  const choiceB = document.getElementById("choiceB");
+
+  // Find and highlight correct button
+  if (choiceA.textContent.toLowerCase() === q.answer.toLowerCase()) {
+    choiceA.classList.add("correct-pick");
+  } else {
+    choiceB.classList.add("correct-pick");
+  }
+  choiceA.disabled = true;
+  choiceB.disabled = true;
+
+  levelScore += 1; // 1 star for needing help
+  document.getElementById("hudScore").textContent = `⭐ ${levelScore}`;
+
+  const dot = document.getElementById("dot-" + currentQuestion);
+  if (dot) { dot.classList.remove("current"); dot.classList.add("wrong"); dot.textContent = "⭐"; dot.style.fontSize = ".6rem"; }
+
+  const gapEl = document.querySelector(".sentence .gap");
+  if (gapEl) { gapEl.textContent = q.answer; gapEl.style.color = "var(--good)"; gapEl.style.borderColor = "var(--good)"; }
+
+  // Show full rule
+  const ruleBox = document.getElementById("ruleBox");
+  const ruleText = document.getElementById("ruleText");
+  const lvl = LEVELS[currentLevel].pairs ? LEVELS[currentLevel] : findLevelForQuestion(q);
+  ruleText.innerHTML = `<strong>📚 La regola:</strong><br>${lvl.rule}`;
+  ruleBox.className = "rule-box visible";
+
+  const feedbackEl = document.getElementById("feedback");
+  feedbackEl.textContent = "Ecco la risposta giusta! Impariamo insieme! 🦉";
+  feedbackEl.className = "feedback good";
+
+  speak("Ecco la risposta giusta!");
+
+  document.getElementById("nextRow").style.display = "flex";
+  document.getElementById("nextBtn").focus();
+}
+
+function findLevelForQuestion(q) {
+  // For mixed level, find which level the question belongs to
+  for (const lvl of LEVELS) {
+    if (lvl.questions.includes(q)) return lvl;
+  }
+  return LEVELS[currentLevel];
+}
+
+// ---- Next question / level complete ----
+function nextQuestion() {
+  playSound("click");
+  currentQuestion++;
+  if (currentQuestion >= currentQuestions.length) {
+    finishLevel();
+  } else {
+    showQuestion();
+  }
+}
+
+function finishLevel() {
+  // Save results
+  levelResults[currentLevel].completed = true;
+  if (levelScore > levelResults[currentLevel].stars) {
+    levelResults[currentLevel].stars = levelScore;
+  }
+
+  // Recalculate total
+  totalStars = levelResults.reduce((sum, r) => sum + r.stars, 0);
+  saveProgress();
+
+  const maxStars = QUESTIONS_PER_LEVEL * 3;
+  const pct = levelScore / maxStars;
+
+  // Check if all levels complete
+  const allDone = levelResults.every(r => r.completed);
+
+  if (allDone && currentLevel === LEVELS.length - 1) {
+    showWinScreen();
+    return;
+  }
+
+  // Result screen
+  const resultMsg = document.getElementById("resultMsg");
+  const resultStars = document.getElementById("resultStars");
+  const resultSummary = document.getElementById("resultSummary");
+  const nextLevelBtn = document.getElementById("nextLevelBtn");
+
+  if (pct >= 0.9) {
+    resultMsg.textContent = `${playerName}, sei fantastico! 🎉`;
+    playSound("perfect");
+    spawnConfetti(120);
+  } else if (pct >= 0.6) {
+    resultMsg.textContent = `Bravo ${playerName}! 🌟`;
+    playSound("fanfare");
+    spawnConfetti(60);
+  } else {
+    resultMsg.textContent = `Bel lavoro, ${playerName}! Continua così! 💪`;
+    playSound("fanfare");
+    spawnConfetti(30);
+  }
+
+  resultStars.textContent = "⭐".repeat(Math.min(levelScore, 24));
+  resultSummary.textContent = `Hai guadagnato ${levelScore} stelle su ${maxStars}!`;
+
+  // Show/hide next level button
+  if (currentLevel < LEVELS.length - 1) {
+    nextLevelBtn.style.display = "";
+    nextLevelBtn.textContent = "Prossimo Livello ➡";
+  } else {
+    nextLevelBtn.style.display = "none";
+  }
+
+  speak(pct >= 0.9 ? "Fantastico! Sei bravissimo!" : "Bravo! Bel lavoro!");
+
+  showScreen("resultScreen");
+}
+
+function startNextLevel() {
+  playSound("click");
+  if (currentLevel < LEVELS.length - 1) {
+    startLevel(currentLevel + 1);
+  } else {
+    goToLevels();
+  }
+}
+
+function showWinScreen() {
+  const maxTotal = LEVELS.length * QUESTIONS_PER_LEVEL * 3;
+  document.getElementById("winStars").textContent = "⭐".repeat(Math.min(totalStars, 30));
+  document.getElementById("winMsg").textContent = `${playerName}, hai completato tutti i livelli con ${totalStars} stelle su ${maxTotal}! Sei un vero mago della grammatica italiana!`;
+  playSound("perfect");
+  spawnConfetti(200);
+  speak(`Complimenti ${playerName}! Sei un mago della grammatica!`);
+  showScreen("winScreen");
+}
+
+// ---- Init ----
+loadProgress();
+
+document.getElementById("nameInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") goToLevels();
+});
+
+// Keyboard support for answer buttons (1/2 or Arrow keys)
+document.addEventListener("keydown", e => {
+  // Only active during game screen
+  if (!document.getElementById("gameScreen").classList.contains("active")) return;
+  const choiceA = document.getElementById("choiceA");
+  const choiceB = document.getElementById("choiceB");
+  if (choiceA.disabled && choiceB.disabled) {
+    // Both disabled = answered, press Enter/Space for next
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const nextRow = document.getElementById("nextRow");
+      if (nextRow.style.display !== "none") nextQuestion();
+    }
+    return;
+  }
+  if (e.key === "1" || e.key === "ArrowLeft") { e.preventDefault(); pickAnswer(0); }
+  else if (e.key === "2" || e.key === "ArrowRight") { e.preventDefault(); pickAnswer(1); }
+});
+
+// Preload voices for speech synthesis
+if ("speechSynthesis" in window) {
+  speechSynthesis.getVoices();
+  speechSynthesis.addEventListener("voiceschanged", () => speechSynthesis.getVoices());
+}
+</script>
+</body>
+</html>

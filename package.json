@@ -1,0 +1,26 @@
+{
+  "name": "games",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sw.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "test:headed": "npx playwright test --headed",
+    "test:mult": "npx playwright test princess-multiplication"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amanzotti/games.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/amanzotti/games/issues"
+  },
+  "homepage": "https://github.com/amanzotti/games#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}
