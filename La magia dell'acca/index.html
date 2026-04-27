@@ -607,11 +607,37 @@ function playSound(name) {
   }
 }
 
+let _preferredVoice = null;
+function pickItalianVoice() {
+  if (_preferredVoice) return _preferredVoice;
+  if (!("speechSynthesis" in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const italian = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("it"));
+  if (!italian.length) return null;
+  const preferredNames = ["Alice", "Federica", "Luca", "Paola", "Carla", "Cosimo", "Giuseppe", "Elsa"];
+  for (const name of preferredNames) {
+    const match = italian.find(v => v.name && v.name.toLowerCase().includes(name.toLowerCase()));
+    if (match) { _preferredVoice = match; return match; }
+  }
+  const enhanced = italian.find(v => /enhanced|premium|natural|neural/i.test(v.name));
+  if (enhanced) { _preferredVoice = enhanced; return enhanced; }
+  const local = italian.find(v => v.localService);
+  _preferredVoice = local || italian[0];
+  return _preferredVoice;
+}
+if ("speechSynthesis" in window) {
+  window.speechSynthesis.addEventListener("voiceschanged", () => { _preferredVoice = null; pickItalianVoice(); });
+  pickItalianVoice();
+}
+
 function speak(text) {
   if (!soundEnabled || !("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "it-IT"; u.rate = 0.85; u.pitch = 1.05;
+  const voice = pickItalianVoice();
+  if (voice) u.voice = voice;
   window.speechSynthesis.speak(u);
 }
 

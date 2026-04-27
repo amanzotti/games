@@ -886,6 +886,33 @@
       }
     }
 
+    // Pick the best Italian voice available (free, OS-dependent)
+    let _preferredVoice = null;
+    function pickItalianVoice() {
+      if (_preferredVoice) return _preferredVoice;
+      if (!("speechSynthesis" in window)) return null;
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices.length) return null;
+      const italian = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("it"));
+      if (!italian.length) return null;
+      // Preference order: high-quality named voices first, then enhanced/premium, then any IT
+      const preferredNames = ["Alice", "Federica", "Luca", "Paola", "Carla", "Cosimo", "Giuseppe", "Elsa"];
+      for (const name of preferredNames) {
+        const match = italian.find(v => v.name && v.name.toLowerCase().includes(name.toLowerCase()));
+        if (match) { _preferredVoice = match; return match; }
+      }
+      // Prefer non-default (often higher quality) and local voices
+      const enhanced = italian.find(v => /enhanced|premium|natural|neural/i.test(v.name));
+      if (enhanced) { _preferredVoice = enhanced; return enhanced; }
+      const local = italian.find(v => v.localService);
+      _preferredVoice = local || italian[0];
+      return _preferredVoice;
+    }
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.addEventListener("voiceschanged", () => { _preferredVoice = null; pickItalianVoice(); });
+      pickItalianVoice();
+    }
+
     function speak(text) {
       if (!soundEnabled) return;
       if (!("speechSynthesis" in window)) return;
@@ -895,6 +922,8 @@
       utterance.lang = "it-IT";
       utterance.rate = 0.85;
       utterance.pitch = 1.1;
+      const voice = pickItalianVoice();
+      if (voice) utterance.voice = voice;
       window.speechSynthesis.speak(utterance);
     }
 
