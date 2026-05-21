@@ -1,4 +1,4 @@
-const CACHE_NAME = "games-v2";
+const CACHE_NAME = "games-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,7 +7,8 @@ const ASSETS = [
   "./icons/icon-512.svg",
   "./Princess%20multiplication/index.html",
   "./Princess%20clock/index.html",
-  "./La%20magia%20dell'acca/index.html"
+  "./La%20magia%20dell'acca/index.html",
+  "./Bosco%20dei%20numeri/index.html"
 ];
 
 self.addEventListener("install", (event) => {

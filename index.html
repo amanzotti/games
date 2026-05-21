@@ -289,7 +289,18 @@
         </article>
 
         <article class="game-card">
-          <span class="emoji" aria-hidden="true">🧚</span>
+          <span class="emoji" aria-hidden="true">�</span>
+          <h2 class="game-title">Bosco dei Numeri</h2>
+          <p class="game-copy">Somme e sottrazioni nel bosco magico con la volpe Luna. Scegli il livello e collezione stelle!</p>
+          <div class="stats" id="bosco-stats"></div>
+          <div class="btn-row">
+            <a class="play-link" href="Bosco%20dei%20numeri/index.html">GIOCA</a>
+            <button class="secondary" type="button" data-copy="Bosco dei numeri">Copia Link</button>
+          </div>
+        </article>
+
+        <article class="game-card">
+          <span class="emoji" aria-hidden="true">�🧚</span>
           <h2 class="game-title">Il Giardino dell'Orologio</h2>
           <p class="game-copy">Impara ore e minuti leggendo e impostando l'orologio con aiuti dolci e feste colorate.</p>
           <div class="stats" id="clock-stats"></div>
@@ -324,6 +335,7 @@
     const welcome = document.getElementById("welcome-pill");
     const mathStats = document.getElementById("math-stats");
     const clockStats = document.getElementById("clock-stats");
+    const boscoStats = document.getElementById("bosco-stats");
     const offlineNote = document.getElementById("offline-note");
     const installBox = document.getElementById("install-box");
     const installBtn = document.getElementById("install-btn");
@@ -345,15 +357,18 @@
       try {
         localStorage.setItem("pmq_name", clean);
         localStorage.setItem("gcq_name", clean);
+        localStorage.setItem("bdn_name", clean);
       } catch (_) {}
     }
 
     function renderStats() {
       mathStats.innerHTML = "";
       clockStats.innerHTML = "";
+      boscoStats.innerHTML = "";
 
       const pmqName = safeGet("pmq_name", "Virgi");
       const gcqName = safeGet("gcq_name", "Virgi");
+      const bdnName = safeGet("bdn_name", "Virgi");
       const badgesRaw = safeGet("gcq_badges", "{}");
 
       let badgeCount = 0;
@@ -362,6 +377,12 @@
       } catch (_) {
         badgeCount = 0;
       }
+
+      let bdnMastered = 0;
+      try {
+        const m = JSON.parse(safeGet("bdn_mastery_v1", "{}"));
+        bdnMastered = Object.values(m).filter((v) => v && v.c >= 3).length;
+      } catch (_) {}
 
       [
         `Giocatrice: ${pmqName}`,
@@ -381,6 +402,16 @@
         t.className = "tag";
         t.textContent = txt;
         clockStats.appendChild(t);
+      });
+
+      [
+        `Giocatrice: ${bdnName}`,
+        `Fatti padroneggiati: ${bdnMastered}`
+      ].forEach((txt) => {
+        const t = document.createElement("span");
+        t.className = "tag";
+        t.textContent = txt;
+        boscoStats.appendChild(t);
       });
     }
 
