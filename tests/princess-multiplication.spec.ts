@@ -598,3 +598,116 @@ test.describe("Typing Mode", () => {
     await expect(page.locator("#type-input")).toHaveValue("12");
   });
 });
+
+// ─── Division / Fact-Family Mode ────────────────────────────────────
+
+test.describe("Operation Mode (Division)", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(FILE_URL, { waitUntil: "networkidle" });
+    await page.evaluate(() => {
+      localStorage.removeItem("pmq_mastery_v1");
+      localStorage.removeItem("pmq_name");
+      localStorage.removeItem("pmq_input_mode");
+      localStorage.removeItem("pmq_operation_mode");
+    });
+    await page.reload({ waitUntil: "networkidle" });
+  });
+
+  test("operation selector visible with 3 pills, mult selected by default", async ({ page }) => {
+    const pills = page.locator("#op-pill-group .mode-pill");
+    await expect(pills).toHaveCount(3);
+    await expect(pills.nth(0)).toHaveAttribute("data-op", "mult");
+    await expect(pills.nth(0)).toHaveClass(/selected/);
+    await expect(pills.nth(1)).toHaveAttribute("data-op", "div");
+    await expect(pills.nth(2)).toHaveAttribute("data-op", "mix");
+  });
+
+  test("selecting division mode persists", async ({ page }) => {
+    await page.click('.mode-pill[data-op="div"]');
+    await expect(page.locator('.mode-pill[data-op="div"]')).toHaveClass(/selected/);
+    const saved = await page.evaluate(() => localStorage.getItem("pmq_operation_mode"));
+    expect(saved).toBe("div");
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(page.locator('.mode-pill[data-op="div"]')).toHaveClass(/selected/);
+  });
+
+  test("division mode shows ÷ symbol in question", async ({ page }) => {
+    await page.click('.mode-pill[data-op="div"]');
+    await selectTable(page, 5);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
+    await expect(page.locator("#question-text")).toContainText("÷");
+    const op = await page.evaluate(() => (window as any)._pmq.state.currentQuestion.op);
+    expect(op).toBe("div");
+  });
+
+  test("correct division answer scores", async ({ page }) => {
+    await page.click('.mode-pill[data-op="div"]');
+    await selectTable(page, 5);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    await clickCorrect(page);
+    await page.waitForTimeout(900);
+    const score = await page.evaluate(() => (window as any)._pmq.state.score);
+    expect(score).toBe(1);
+  });
+
+  test("division answer is the inverse multiplication factor", async ({ page }) => {
+    await page.click('.mode-pill[data-op="div"]');
+    await selectTable(page, 5);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    const q = await page.evaluate(() => (window as any)._pmq.state.currentQuestion);
+    // For division: dividend / divisor = answer, and dividend = table*multiplier
+    expect(q.dividend).toBe(q.divisor * q.answer);
+    expect(q.divisor * q.answer).toBe(q.table * q.multiplier);
+  });
+
+  test("typing mode + division mode works together", async ({ page }) => {
+    await page.click('.mode-pill[data-mode="type"]');
+    await page.click('.mode-pill[data-op="div"]');
+    await selectTable(page, 5);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
+    const ans = await page.evaluate(() => (window as any)._pmq.state.currentQuestion.answer);
+    await page.fill("#type-input", String(ans));
+    await page.locator("#type-input").press("Enter");
+    await page.waitForTimeout(1000);
+    const score = await page.evaluate(() => (window as any)._pmq.state.score);
+    expect(score).toBe(1);
+  });
+
+  test("mix mode produces both mult and div questions", async ({ page }) => {
+    await page.click('.mode-pill[data-op="mix"]');
+    await selectTable(page, 5);
+    await selectTimer(page, "∞");
+    // Spin renderQuestion many times via makeQuestionForFact directly
+    const seenOps = await page.evaluate(() => {
+      const _p = (window as any)._pmq;
+      const ops = new Set();
+      for (let i = 0; i < 50; i++) {
+        const q = _p.makeQuestionForFact({ table: 5, multiplier: 3 });
+        ops.add(q.op);
+      }
+      return [...ops];
+    });
+    expect(seenOps).toContain("mult");
+    expect(seenOps).toContain("div");
+  });
+
+  test("division mastery updates use the underlying multiplication fact key", async ({ page }) => {
+    await page.click('.mode-pill[data-op="div"]');
+    await selectTable(page, 5);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    const q = await page.evaluate(() => (window as any)._pmq.state.currentQuestion);
+    await clickCorrect(page);
+    await page.waitForTimeout(900);
+    const mastery = await page.evaluate(() => JSON.parse(localStorage.getItem("pmq_mastery_v1") || "{}"));
+    const key = `${q.table}x${q.multiplier}`;
+    expect(mastery[key]).toBeTruthy();
+    expect(mastery[key].c).toBeGreaterThanOrEqual(1);
+  });
+});

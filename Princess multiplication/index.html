@@ -728,6 +728,15 @@
             <button type="button" class="mode-pill" data-mode="type">⌨️ Sfida: scrivi tu</button>
           </div>
         </div>
+
+        <div class="table-row">
+          <label>Operazione</label>
+          <div class="mode-pill-group" id="op-pill-group">
+            <button type="button" class="mode-pill selected" data-op="mult">× Moltiplica</button>
+            <button type="button" class="mode-pill" data-op="div">÷ Dividi</button>
+            <button type="button" class="mode-pill" data-op="mix">🎲 Famiglia</button>
+          </div>
+        </div>
       </div>
 
       <div class="btn-row">
@@ -847,6 +856,7 @@
       masteryResetBtn: document.getElementById("mastery-reset-btn"),
       sessionInsights: document.getElementById("session-insights"),
       modePillGroup: document.getElementById("mode-pill-group"),
+      opPillGroup: document.getElementById("op-pill-group"),
       typeArea: document.getElementById("type-area"),
       typeInput: document.getElementById("type-input"),
       typeSubmitBtn: document.getElementById("type-submit-btn")
@@ -857,6 +867,7 @@
       selectedTables: new Set(),
       selectedTimer: DEFAULT_TIMER,
       inputMode: "choice", // "choice" | "type"
+      operationMode: "mult", // "mult" | "div" | "mix"
       typeAttempts: 0,
       score: 0,
       streak: 0,
@@ -1344,20 +1355,26 @@
       return entry.a >= 2 && (entry.c / entry.a) < 0.6;
     }
 
-    function showStrategyHint(table, multiplier) {
+    function showStrategyHint(table, multiplier, op, cq) {
       const hintEl = document.getElementById("strategy-hint");
       if (!shouldShowHint(table, multiplier)) {
         hintEl.className = "strategy-hint";
         return false;
       }
-      const hint = getStrategyHint(table, multiplier);
-      if (!hint) {
-        hintEl.className = "strategy-hint";
-        return false;
+      const multHint = getStrategyHint(table, multiplier);
+      let hint;
+      if (op === "div" && cq) {
+        const inverse = `Pensa al fatto inverso: ${cq.answer} × ${cq.divisor} = ${cq.dividend}. Quindi ${cq.dividend} ÷ ${cq.divisor} = ${cq.answer}!`;
+        hint = multHint ? `${inverse} — ${multHint}` : inverse;
+      } else {
+        if (!multHint) {
+          hintEl.className = "strategy-hint";
+          return false;
+        }
+        hint = multHint;
       }
       hintEl.innerHTML = `<span class="hint-icon">💡</span> ${hint}`;
       hintEl.className = "strategy-hint visible";
-      // Speak the hint after a short pause
       setTimeout(() => speak(hint), 600);
       return true;
     }
@@ -1401,11 +1418,67 @@
       return shuffle(cleaned).slice(0, 3);
     }
 
+    // Generate distractors for division (answer is a small quotient, 1–12)
+    function makeDistractorsDivision(answer) {
+      const candidates = new Set();
+      for (let d = 1; d <= 4; d++) {
+        if (answer - d > 0) candidates.add(answer - d);
+        candidates.add(answer + d);
+      }
+      while (candidates.size < 8) {
+        const v = Math.max(1, answer + Math.floor(Math.random() * 9) - 4);
+        if (v !== answer) candidates.add(v);
+      }
+      const cleaned = [...candidates].filter((v) => v > 0 && v !== answer);
+      return shuffle(cleaned).slice(0, 3);
+    }
+
+    // Produce the actual question (display string, answer, op) from a stored fact.
+    function makeQuestionForFact(fact) {
+      const { table, multiplier } = fact;
+      const product = table * multiplier;
+      let op = state.operationMode;
+      if (op === "mix") op = Math.random() < 0.5 ? "mult" : "div";
+
+      if (op === "div") {
+        // Randomly choose which factor is the divisor
+        const divisorIsTable = Math.random() < 0.5;
+        const divisor = divisorIsTable ? table : multiplier;
+        const quotient = divisorIsTable ? multiplier : table;
+        return {
+          op: "div",
+          answer: quotient,
+          display: `${product} ÷ ${divisor} = ?`,
+          spoken: `Quanto fa ${product} diviso ${divisor}?`,
+          recordTable: table,
+          recordMultiplier: multiplier,
+          divisor,
+          dividend: product
+        };
+      }
+      return {
+        op: "mult",
+        answer: product,
+        display: `${table} × ${multiplier} = ?`,
+        spoken: `Quanto fa ${table} per ${multiplier}?`,
+        recordTable: table,
+        recordMultiplier: multiplier
+      };
+    }
+
     function createOptions(table, multiplier) {
       const answer = table * multiplier;
       const distractors = makeDistractors(table, multiplier, answer);
       const options = shuffle([answer, ...distractors]);
       return { answer, options };
+    }
+
+    function createOptionsForQuestion(q) {
+      const distractors = q.op === "div"
+        ? makeDistractorsDivision(q.answer)
+        : makeDistractors(q.recordTable, q.recordMultiplier, q.answer);
+      const options = shuffle([q.answer, ...distractors]);
+      return { answer: q.answer, options };
     }
 
     function updateHud() {
@@ -1653,19 +1726,25 @@
           state.questions.splice(retryPos, 0, { table, multiplier });
         }
 
-        const factStr = `${table} × ${multiplier} = ${answer}`;
+        const cq = state.currentQuestion;
+        const factStr = cq.op === "div"
+          ? `${cq.dividend} ÷ ${cq.divisor} = ${answer}`
+          : `${table} × ${multiplier} = ${answer}`;
+        const spokenFact = cq.op === "div"
+          ? `${cq.dividend} diviso ${cq.divisor} fa ${answer}.`
+          : `${table} per ${multiplier} fa ${answer}.`;
         if (timedOut) {
           setFeedback(`Tempo scaduto! ${factStr} ⏰`, "bad");
           playSound("timeout");
-          speak(`Tempo scaduto. ${table} per ${multiplier} fa ${answer}.`);
+          speak(`Tempo scaduto. ${spokenFact}`);
         } else {
           setFeedback(`Quasi! ${factStr} 🌸`, "bad");
           playSound("wrong");
-          speak(`Quasi! ${table} per ${multiplier} fa ${answer}.`);
+          speak(`Quasi! ${spokenFact}`);
         }
 
         // Show strategy hint for struggling facts
-        const hintShown = showStrategyHint(table, multiplier);
+        const hintShown = showStrategyHint(table, multiplier, cq.op, cq);
         // Give more time to read the hint
         updateHud();
         setTimeout(nextQuestion, hintShown ? 4000 : 850);
@@ -1683,22 +1762,27 @@
       }
 
       const q = state.questions[state.questionIndex];
-      const { answer, options } = createOptions(q.table, q.multiplier);
+      const generated = makeQuestionForFact(q);
+      const { answer, options } = createOptionsForQuestion(generated);
 
       state.currentQuestion = {
-        table: q.table,
-        multiplier: q.multiplier,
-        answer
+        table: generated.recordTable,
+        multiplier: generated.recordMultiplier,
+        answer,
+        op: generated.op,
+        display: generated.display,
+        divisor: generated.divisor,
+        dividend: generated.dividend
       };
       state.typeAttempts = 0;
 
-      elements.questionText.textContent = `${q.table} × ${q.multiplier} = ?`;
+      elements.questionText.textContent = generated.display;
       elements.questionText.classList.remove("slide-in");
       void elements.questionText.offsetWidth;
       elements.questionText.classList.add("slide-in");
       setFeedback("");
       hideStrategyHint();
-      speak(`Quanto fa ${q.table} per ${q.multiplier}?`);
+      speak(generated.spoken);
       updateHud();
       if (state.inputMode === "type") {
         showTypeArea();
@@ -1971,6 +2055,30 @@
     });
     updateModePillStyles();
 
+    // Restore operation mode preference
+    try {
+      const savedOp = localStorage.getItem("pmq_operation_mode");
+      if (savedOp === "mult" || savedOp === "div" || savedOp === "mix") {
+        state.operationMode = savedOp;
+      }
+    } catch (_) {}
+    function updateOpPillStyles() {
+      [...elements.opPillGroup.children].forEach((b) => {
+        b.classList.toggle("selected", b.dataset.op === state.operationMode);
+      });
+    }
+    function selectOperationMode(op) {
+      if (op !== "mult" && op !== "div" && op !== "mix") return;
+      state.operationMode = op;
+      try { localStorage.setItem("pmq_operation_mode", op); } catch (_) {}
+      updateOpPillStyles();
+      updateRoundNote();
+    }
+    [...elements.opPillGroup.children].forEach((b) => {
+      b.addEventListener("click", () => selectOperationMode(b.dataset.op));
+    });
+    updateOpPillStyles();
+
     // Wire up typing input
     elements.typeSubmitBtn.addEventListener("click", submitTypedAnswer);
     elements.typeInput.addEventListener("keydown", (e) => {
@@ -1990,7 +2098,7 @@
     createSparkles();
 
     // Expose for testing
-    window._pmq = { state, generateAdaptiveQuestions, isMultiTableMode, isAllTablesMode, selectInputMode, submitTypedAnswer };
+    window._pmq = { state, generateAdaptiveQuestions, isMultiTableMode, isAllTablesMode, selectInputMode, selectOperationMode, submitTypedAnswer, makeQuestionForFact };
   </script>
 </body>
 </html>
