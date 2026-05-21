@@ -812,8 +812,9 @@
     </section>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
+    const TEST_MODE = new URLSearchParams(location.search).has('test');
+    if (!TEST_MODE) { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js'; document.head.appendChild(s); }
     const TOTAL_QUESTIONS = 10;
     const TIMER_OPTIONS = [0, 3, 5, 7, 10, 15];
     const DEFAULT_TIMER = 0;
@@ -924,7 +925,7 @@
     }
 
     function playSound(name) {
-      if (!soundEnabled) return;
+      if (TEST_MODE || !soundEnabled) return;
       ensureAudioContext();
 
       switch (name) {
@@ -998,7 +999,7 @@
     }
 
     function speak(text) {
-      if (!soundEnabled) return;
+      if (TEST_MODE || !soundEnabled) return;
       if (!("speechSynthesis" in window)) return;
 
       window.speechSynthesis.cancel();
@@ -1583,6 +1584,7 @@
     }
 
     function runCelebrationConfettiBurst() {
+      if (TEST_MODE) return;
       confetti({
         particleCount: 90,
         spread: 72,
@@ -1747,12 +1749,12 @@
         const hintShown = showStrategyHint(table, multiplier, cq.op, cq);
         // Give more time to read the hint
         updateHud();
-        setTimeout(nextQuestion, hintShown ? 4000 : 850);
+        setTimeout(nextQuestion, TEST_MODE ? 50 : (hintShown ? 4000 : 850));
         return;
       }
 
       updateHud();
-      setTimeout(nextQuestion, 850);
+      setTimeout(nextQuestion, TEST_MODE ? 50 : 850);
     }
 
     function renderQuestion() {
@@ -1787,6 +1789,7 @@
       if (state.inputMode === "type") {
         showTypeArea();
         resetTypeInput();
+        state.choiceLocked = false;
         elements.typeInput.focus();
       } else {
         showChoicesArea();

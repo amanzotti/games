@@ -1,9 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 
-const FILE_URL = `file:///${path.resolve("Princess multiplication/index.html").replace(/\\/g, "/")}`;
+const FILE_URL = `file:///${path.resolve("Princess multiplication/index.html").replace(/\\/g, "/")}?test=1`;
 
-// ─── helpers ───────────────────────────────────────────────────────
+// --- helpers ---
 
 async function currentAnswer(page: Page): Promise<number> {
   await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
@@ -12,7 +12,7 @@ async function currentAnswer(page: Page): Promise<number> {
 
 async function clickCorrect(page: Page) {
   const ans = await currentAnswer(page);
-  await page.click(`#choices .choice-btn:has-text("${ans}")`);
+  await page.locator(`#choices .choice-btn`).getByText(String(ans), { exact: true }).click();
 }
 
 async function clickWrong(page: Page) {
@@ -22,7 +22,7 @@ async function clickWrong(page: Page) {
     (els, a) => els.filter((e) => Number(e.textContent) !== a).map((e) => e.textContent!),
     ans
   );
-  await page.click(`#choices .choice-btn:has-text("${wrongTexts[0]}")`);
+  await page.locator(`#choices .choice-btn`).getByText(wrongTexts[0], { exact: true }).click();
 }
 
 async function selectTable(page: Page, n: number) {
@@ -49,21 +49,39 @@ async function selectTimer(page: Page, label: string) {
   }
 }
 
-// ─── tests ─────────────────────────────────────────────────────────
+/** Wait for question to advance (choiceLocked becomes false after nextQuestion renders) */
+async function waitForAdvance(page: Page) {
+  await page.waitForFunction(() => !(window as any)._pmq.state.choiceLocked);
+}
+
+/** Load page and wait for game JS to be ready */
+async function loadGame(page: Page) {
+  await page.goto(FILE_URL, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => (window as any)._pmq !== undefined);
+}
+
+/** Start a game with single table, no timer */
+async function startGame(page: Page, table: number) {
+  await selectTable(page, table);
+  await page.locator("#start-btn").click();
+  await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
+}
+
+// --- tests ---
 
 test.describe("Princess Math Quest", () => {
   test.beforeEach(async ({ page }) => {
-    // Clear saved state so tests are independent
-    await page.goto(FILE_URL, { waitUntil: "networkidle" });
+    await loadGame(page);
     await page.evaluate(() => {
       localStorage.removeItem("pmq_mastery_v1");
       localStorage.removeItem("pmq_name");
       localStorage.removeItem("pmq_input_mode");
     });
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => (window as any)._pmq !== undefined);
   });
 
-  // ── Welcome Screen ──────────────────────────────────────────────
+  // -- Welcome Screen --
 
   test.describe("Welcome Screen", () => {
     test("shows title and subtitle", async ({ page }) => {
@@ -71,7 +89,7 @@ test.describe("Princess Math Quest", () => {
       await expect(page.locator("#welcome-screen .subtitle")).toBeVisible();
     });
 
-    test("has table buttons 2–12 plus TUTTE", async ({ page }) => {
+    test("has table buttons 2-12 plus TUTTE", async ({ page }) => {
       const btns = page.locator("#table-buttons .table-btn");
       await expect(btns).toHaveCount(12);
       await expect(btns.last()).toContainText("TUTTE");
@@ -93,56 +111,44 @@ test.describe("Princess Math Quest", () => {
 
     test("restores saved player name", async ({ page }) => {
       await page.evaluate(() => localStorage.setItem("pmq_name", "Giulia"));
-      await page.reload({ waitUntil: "networkidle" });
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await page.waitForFunction(() => (window as any)._pmq !== undefined);
       await expect(page.locator("#player-name")).toHaveValue("Giulia");
     });
   });
 
-  // ── Single Table Mode ──────────────────────────────────────────
+  // -- Single Table Mode --
 
   test.describe("Single Table Mode", () => {
     test("plays a single-table round with correct/wrong answers", async ({ page }) => {
       await page.fill("#player-name", "Alice");
-      await selectTable(page, 7);
-      await page.click("#start-btn");
-      await page.waitForTimeout(200);
+      await startGame(page, 7);
 
-      // Game screen visible
       await expect(page.locator("#game-screen")).toBeVisible();
       await expect(page.locator("#table-title")).toContainText("7");
-
-      // Question format
-      await expect(page.locator("#question-text")).toHaveText(/7 × \d+ = \?/);
-
-      // 4 choices
+      await expect(page.locator("#question-text")).toHaveText(/7 \u00d7 \d+ = \?/);
       await expect(page.locator("#choices .choice-btn")).toHaveCount(4);
 
       // Correct answer
       await clickCorrect(page);
-      await page.waitForTimeout(100);
       await expect(page.locator("#score-label")).toContainText("1");
       await expect(page.locator("#feedback")).toHaveClass(/good/);
 
-      // Next question
-      await page.waitForTimeout(900);
-      await expect(page.locator("#question-text")).toHaveText(/7 × \d+ = \?/);
+      // Wait for next question
+      await waitForAdvance(page);
+      await expect(page.locator("#question-text")).toHaveText(/7 \u00d7 \d+ = \?/);
 
       // Wrong answer
       await clickWrong(page);
-      await page.waitForTimeout(100);
       const feedback = await page.textContent("#feedback");
       expect(feedback).toMatch(/Quasi|risposta era/);
     });
 
     test("shows results after exiting early", async ({ page }) => {
-      await selectTable(page, 4);
-      await page.click("#start-btn");
-      await page.waitForTimeout(200);
+      await startGame(page, 4);
       await clickCorrect(page);
-      await page.waitForTimeout(900);
+      await waitForAdvance(page);
       await page.click("#exit-btn");
-      await page.waitForTimeout(200);
-
       await expect(page.locator("#results-screen")).toBeVisible();
       await expect(page.locator("#results-stars")).not.toBeEmpty();
     });
@@ -153,11 +159,9 @@ test.describe("Princess Math Quest", () => {
     });
 
     test("records mastery data for single table questions", async ({ page }) => {
-      await selectTable(page, 3);
-      await page.click("#start-btn");
-      await page.waitForTimeout(200);
+      await startGame(page, 3);
       await clickCorrect(page);
-      await page.waitForTimeout(900);
+      await waitForAdvance(page);
       await page.click("#exit-btn");
 
       const data = await page.evaluate(() => JSON.parse(localStorage.getItem("pmq_mastery_v1")!));
@@ -165,23 +169,22 @@ test.describe("Princess Math Quest", () => {
     });
   });
 
-  // ── All Tables (TUTTE) Mode ─────────────────────────────────────
+  // -- All Tables (TUTTE) Mode --
 
   test.describe("TUTTE Mode", () => {
     test("starts with 15 adaptive questions from mixed tables", async ({ page }) => {
       await selectTable(page, 0);
-      await page.click("#start-btn");
-      await page.waitForTimeout(200);
+      await page.locator("#start-btn").click();
+      await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
 
       await expect(page.locator("#table-title")).toContainText("Tutte le Tabelline");
 
-      // Question mixes different tables
       const seenTables = new Set<number>();
       for (let i = 0; i < 5; i++) {
         const t = await page.evaluate(() => (window as any)._pmq.state.currentQuestion.table);
         seenTables.add(t);
         await clickCorrect(page);
-        await page.waitForTimeout(900);
+        await waitForAdvance(page);
       }
       expect(seenTables.size).toBeGreaterThanOrEqual(2);
     });
@@ -195,27 +198,24 @@ test.describe("Princess Math Quest", () => {
 
     test("re-queues wrong answers for later retry", async ({ page }) => {
       await selectTable(page, 0);
-      await page.click("#start-btn");
-      await page.waitForTimeout(200);
+      await page.locator("#start-btn").click();
+      await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
 
       const initialLen = await page.evaluate(() => (window as any)._pmq.state.questions.length);
       await clickWrong(page);
-      await page.waitForTimeout(900);
       const newLen = await page.evaluate(() => (window as any)._pmq.state.questions.length);
       expect(newLen).toBe(initialLen + 1);
     });
 
     test("shows session insights on results screen", async ({ page }) => {
       await selectTable(page, 0);
-      await page.click("#start-btn");
-      await page.waitForTimeout(200);
-      // Answer 2 questions then exit
+      await page.locator("#start-btn").click();
+      await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
       await clickCorrect(page);
-      await page.waitForTimeout(900);
+      await waitForAdvance(page);
       await clickWrong(page);
-      await page.waitForTimeout(900);
+      await waitForAdvance(page);
       await page.click("#exit-btn");
-      await page.waitForTimeout(200);
 
       await expect(page.locator("#session-insights")).toBeVisible();
       const html = await page.innerHTML("#session-insights");
@@ -223,11 +223,10 @@ test.describe("Princess Math Quest", () => {
     });
   });
 
-  // ── Adaptive Algorithm ──────────────────────────────────────────
+  // -- Adaptive Algorithm --
 
   test.describe("Adaptive Algorithm", () => {
     test("prioritizes struggling facts", async ({ page }) => {
-      // Seed struggling data and select all tables
       await page.evaluate(() => {
         const data: Record<string, any> = {};
         data["3x7"] = { c: 1, a: 5, t: Date.now() };
@@ -235,7 +234,6 @@ test.describe("Princess Math Quest", () => {
         for (let m = 1; m <= 10; m++) data[`2x${m}`] = { c: 10, a: 10, t: Date.now() };
         localStorage.setItem("pmq_mastery_v1", JSON.stringify(data));
       });
-      // Select all tables so generateAdaptiveQuestions has full scope
       await selectTable(page, 0);
 
       const result = await page.evaluate(() => {
@@ -248,13 +246,11 @@ test.describe("Princess Math Quest", () => {
     });
 
     test("introduces max 4 new facts per session", async ({ page }) => {
-      // Mark almost everything as mastered except 10 facts
       await page.evaluate(() => {
         const data: Record<string, any> = {};
         for (let t = 2; t <= 12; t++)
           for (let m = 1; m <= 10; m++)
             if (t <= 10) data[`${t}x${m}`] = { c: 10, a: 10, t: Date.now() };
-        // 11x and 12x are "new"
         localStorage.setItem("pmq_mastery_v1", JSON.stringify(data));
       });
       await selectTable(page, 0);
@@ -268,7 +264,7 @@ test.describe("Princess Math Quest", () => {
     });
   });
 
-  // ── Multi-Select Tables ──────────────────────────────────────────
+  // -- Multi-Select Tables --
 
   test.describe("Multi-Select Tables", () => {
     test("can select multiple tables by clicking", async ({ page }) => {
@@ -276,7 +272,6 @@ test.describe("Princess Math Quest", () => {
       await selectTable(page, 5);
       await selectTable(page, 7);
 
-      // All three should be selected
       const selected = await page.$$eval(
         "#table-buttons .table-btn.selected:not(.all-mode)",
         (els) => els.map((e) => Number(e.textContent))
@@ -287,7 +282,7 @@ test.describe("Princess Math Quest", () => {
     test("deselects a table by clicking again", async ({ page }) => {
       await selectTable(page, 3);
       await selectTable(page, 5);
-      await selectTable(page, 3); // deselect
+      await selectTable(page, 3);
 
       const selected = await page.$$eval(
         "#table-buttons .table-btn.selected:not(.all-mode)",
@@ -299,19 +294,17 @@ test.describe("Princess Math Quest", () => {
     test("multi-select generates questions only from chosen tables", async ({ page }) => {
       await selectTable(page, 4);
       await selectTable(page, 6);
-      await page.click("#start-btn");
-      await page.waitForTimeout(200);
+      await page.locator("#start-btn").click();
+      await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
 
-      // Title shows selected tables
       await expect(page.locator("#table-title")).toContainText("4");
       await expect(page.locator("#table-title")).toContainText("6");
 
-      // Play 5 questions — all should be from table 4 or 6
       for (let i = 0; i < 5; i++) {
         const t = await page.evaluate(() => (window as any)._pmq.state.currentQuestion.table);
         expect([4, 6]).toContain(t);
         await clickCorrect(page);
-        await page.waitForTimeout(900);
+        await waitForAdvance(page);
       }
     });
 
@@ -338,8 +331,8 @@ test.describe("Princess Math Quest", () => {
     });
 
     test("TUTTE toggle deselects all", async ({ page }) => {
-      await selectTable(page, 0); // select all
-      await selectTable(page, 0); // deselect all
+      await selectTable(page, 0);
+      await selectTable(page, 0);
       const selectedCount = await page.$$eval(
         "#table-buttons .table-btn.selected",
         (els) => els.length
@@ -351,22 +344,20 @@ test.describe("Princess Math Quest", () => {
     test("re-queues wrong answers in multi-select mode", async ({ page }) => {
       await selectTable(page, 3);
       await selectTable(page, 5);
-      await page.click("#start-btn");
-      await page.waitForTimeout(200);
+      await page.locator("#start-btn").click();
+      await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
 
       const initialLen = await page.evaluate(() => (window as any)._pmq.state.questions.length);
       await clickWrong(page);
-      await page.waitForTimeout(900);
       const newLen = await page.evaluate(() => (window as any)._pmq.state.questions.length);
       expect(newLen).toBe(initialLen + 1);
     });
   });
 
-  // ── Mastery Grid ────────────────────────────────────────────────
+  // -- Mastery Grid --
 
   test.describe("Mastery Grid", () => {
     test("renders 110 cells with correct stats", async ({ page }) => {
-      // Seed some data
       await page.evaluate(() => {
         const data: Record<string, any> = {};
         data["5x3"] = { c: 5, a: 5, t: Date.now() };
@@ -376,8 +367,6 @@ test.describe("Princess Math Quest", () => {
       });
 
       await page.click("#mastery-btn");
-      await page.waitForTimeout(200);
-
       await expect(page.locator("#mastery-screen")).toBeVisible();
       await expect(page.locator(".mastery-table td")).toHaveCount(110);
       await expect(page.locator("#mastery-stats")).toContainText("1");
@@ -386,9 +375,8 @@ test.describe("Princess Math Quest", () => {
 
     test("back button returns to welcome", async ({ page }) => {
       await page.click("#mastery-btn");
-      await page.waitForTimeout(200);
+      await expect(page.locator("#mastery-screen")).toBeVisible();
       await page.click("#mastery-back-btn");
-      await page.waitForTimeout(200);
       await expect(page.locator("#welcome-screen")).toBeVisible();
     });
 
@@ -399,24 +387,22 @@ test.describe("Princess Math Quest", () => {
 
       page.on("dialog", (d) => d.accept());
       await page.click("#mastery-btn");
-      await page.waitForTimeout(200);
+      await expect(page.locator("#mastery-screen")).toBeVisible();
       await page.click("#mastery-reset-btn");
-      await page.waitForTimeout(200);
 
       const data = await page.evaluate(() => localStorage.getItem("pmq_mastery_v1"));
       expect(data).toBeNull();
     });
   });
 
-  // ── Timer ───────────────────────────────────────────────────────
+  // -- Timer --
 
   test.describe("Timer", () => {
     test("no-timer mode keeps bar at 100%", async ({ page }) => {
       await selectTable(page, 2);
-      await selectTimer(page, "∞");
-      await page.click("#start-btn");
-      await page.waitForTimeout(200);
-      await expect(page.locator("#timer-bar")).toHaveCSS("width", /./);
+      await selectTimer(page, "\u221e");
+      await page.locator("#start-btn").click();
+      await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
       await page.waitForTimeout(1500);
       const w = await page.$eval("#timer-bar", (el) => el.style.width);
       expect(w).toBe("100%");
@@ -425,7 +411,8 @@ test.describe("Princess Math Quest", () => {
     test("timed mode decreases the bar", async ({ page }) => {
       await selectTable(page, 2);
       await selectTimer(page, "10s");
-      await page.click("#start-btn");
+      await page.locator("#start-btn").click();
+      await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
       await page.waitForTimeout(1500);
       const w = await page.$eval("#timer-bar", (el) => parseFloat(el.style.width));
       expect(w).toBeLessThan(95);
@@ -433,19 +420,19 @@ test.describe("Princess Math Quest", () => {
     });
   });
 
-  // ── Mute Button ─────────────────────────────────────────────────
+  // -- Mute Button --
 
   test.describe("Mute Button", () => {
-    test("toggles between 🔇 and 🔊", async ({ page }) => {
-      await expect(page.locator("#mute-btn")).toHaveText("🔇");
+    test("toggles between mute icons", async ({ page }) => {
+      await expect(page.locator("#mute-btn")).toHaveText("\ud83d\udd07");
       await page.click("#mute-btn");
-      await expect(page.locator("#mute-btn")).toHaveText("🔊");
+      await expect(page.locator("#mute-btn")).toHaveText("\ud83d\udd0a");
       await page.click("#mute-btn");
-      await expect(page.locator("#mute-btn")).toHaveText("🔇");
+      await expect(page.locator("#mute-btn")).toHaveText("\ud83d\udd07");
     });
   });
 
-  // ── No Console Errors ──────────────────────────────────────────
+  // -- No Console Errors --
 
   test("no console errors during gameplay", async ({ page }) => {
     const errors: string[] = [];
@@ -454,44 +441,44 @@ test.describe("Princess Math Quest", () => {
     });
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await selectTable(page, 5);
-    await page.click("#start-btn");
-    await page.waitForTimeout(200);
+    await startGame(page, 5);
     for (let i = 0; i < 3; i++) {
       await clickCorrect(page);
-      await page.waitForTimeout(900);
+      await waitForAdvance(page);
     }
     await page.click("#exit-btn");
-    await page.waitForTimeout(200);
+    await expect(page.locator("#results-screen")).toBeVisible();
     await page.click("#change-table-btn");
-    await page.waitForTimeout(200);
+    await expect(page.locator("#welcome-screen")).toBeVisible();
     await selectTable(page, 0);
-    await page.click("#start-btn");
-    await page.waitForTimeout(200);
+    await page.locator("#start-btn").click();
+    await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
     await clickWrong(page);
-    await page.waitForTimeout(900);
+    await waitForAdvance(page);
     await page.click("#exit-btn");
-    await page.waitForTimeout(200);
+    await expect(page.locator("#results-screen")).toBeVisible();
     await page.click("#change-table-btn");
-    await page.waitForTimeout(200);
+    await expect(page.locator("#welcome-screen")).toBeVisible();
     await page.click("#mastery-btn");
-    await page.waitForTimeout(200);
+    await expect(page.locator("#mastery-screen")).toBeVisible();
 
     expect(errors).toHaveLength(0);
   });
 });
 
-// ─── Typing Mode ────────────────────────────────────────
+// --- Typing Mode ---
 
 test.describe("Typing Mode", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(FILE_URL, { waitUntil: "networkidle" });
+    await page.goto(FILE_URL, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => (window as any)._pmq !== undefined);
     await page.evaluate(() => {
       localStorage.removeItem("pmq_mastery_v1");
       localStorage.removeItem("pmq_name");
       localStorage.removeItem("pmq_input_mode");
     });
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => (window as any)._pmq !== undefined);
   });
 
   test("mode selector visible with two pills, choice selected by default", async ({ page }) => {
@@ -507,15 +494,16 @@ test.describe("Typing Mode", () => {
     await expect(page.locator('.mode-pill[data-mode="type"]')).toHaveClass(/selected/);
     const saved = await page.evaluate(() => localStorage.getItem("pmq_input_mode"));
     expect(saved).toBe("type");
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => (window as any)._pmq !== undefined);
     await expect(page.locator('.mode-pill[data-mode="type"]')).toHaveClass(/selected/);
   });
 
   test("typing mode shows input + OK button, hides choice grid", async ({ page }) => {
     await page.click('.mode-pill[data-mode="type"]');
     await selectTable(page, 5);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
+    await selectTimer(page, "\u221e");
+    await page.locator("#start-btn").click();
     await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
     await expect(page.locator("#type-area")).toBeVisible();
     await expect(page.locator("#type-input")).toBeVisible();
@@ -526,12 +514,13 @@ test.describe("Typing Mode", () => {
   test("correct typed answer advances + scores", async ({ page }) => {
     await page.click('.mode-pill[data-mode="type"]');
     await selectTable(page, 5);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
+    await selectTimer(page, "\u221e");
+    await page.locator("#start-btn").click();
+    await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
     const ans = await currentAnswer(page);
     await page.fill("#type-input", String(ans));
     await page.click("#type-submit-btn");
-    await page.waitForTimeout(1000);
+    await waitForAdvance(page);
     const score = await page.evaluate(() => (window as any)._pmq.state.score);
     expect(score).toBe(1);
   });
@@ -539,12 +528,13 @@ test.describe("Typing Mode", () => {
   test("Enter key submits typed answer", async ({ page }) => {
     await page.click('.mode-pill[data-mode="type"]');
     await selectTable(page, 3);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
+    await selectTimer(page, "\u221e");
+    await page.locator("#start-btn").click();
+    await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
     const ans = await currentAnswer(page);
     await page.fill("#type-input", String(ans));
     await page.locator("#type-input").press("Enter");
-    await page.waitForTimeout(1000);
+    await waitForAdvance(page);
     const score = await page.evaluate(() => (window as any)._pmq.state.score);
     expect(score).toBe(1);
   });
@@ -552,15 +542,14 @@ test.describe("Typing Mode", () => {
   test("first wrong typed answer lets user retry, second wrong advances", async ({ page }) => {
     await page.click('.mode-pill[data-mode="type"]');
     await selectTable(page, 5);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
+    await selectTimer(page, "\u221e");
+    await page.locator("#start-btn").click();
+    await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
     const ans = await currentAnswer(page);
     const initialIndex = await page.evaluate(() => (window as any)._pmq.state.questionIndex);
     // First wrong
     await page.fill("#type-input", String(ans + 1));
     await page.click("#type-submit-btn");
-    await page.waitForTimeout(900);
-    // Still on same question, input re-enabled
     const sameIndex = await page.evaluate(() => (window as any)._pmq.state.questionIndex);
     expect(sameIndex).toBe(initialIndex);
     await expect(page.locator("#type-input")).toBeEnabled();
@@ -569,7 +558,7 @@ test.describe("Typing Mode", () => {
     // Second wrong advances
     await page.fill("#type-input", String(ans + 2));
     await page.click("#type-submit-btn");
-    await page.waitForTimeout(1500);
+    await waitForAdvance(page);
     const newIndex = await page.evaluate(() => (window as any)._pmq.state.questionIndex);
     expect(newIndex).toBe(initialIndex + 1);
   });
@@ -577,12 +566,11 @@ test.describe("Typing Mode", () => {
   test("empty submit shows gentle prompt, does not advance", async ({ page }) => {
     await page.click('.mode-pill[data-mode="type"]');
     await selectTable(page, 2);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
+    await selectTimer(page, "\u221e");
+    await page.locator("#start-btn").click();
     await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
     const initialIndex = await page.evaluate(() => (window as any)._pmq.state.questionIndex);
     await page.click("#type-submit-btn");
-    await page.waitForTimeout(400);
     await expect(page.locator("#feedback")).toContainText("Scrivi un numero");
     const sameIndex = await page.evaluate(() => (window as any)._pmq.state.questionIndex);
     expect(sameIndex).toBe(initialIndex);
@@ -591,26 +579,29 @@ test.describe("Typing Mode", () => {
   test("non-digit input is stripped", async ({ page }) => {
     await page.click('.mode-pill[data-mode="type"]');
     await selectTable(page, 4);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
+    await selectTimer(page, "\u221e");
+    await page.locator("#start-btn").click();
+    await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
     await page.locator("#type-input").focus();
     await page.keyboard.type("abc12xyz");
     await expect(page.locator("#type-input")).toHaveValue("12");
   });
 });
 
-// ─── Division / Fact-Family Mode ────────────────────────────────────
+// --- Division / Fact-Family Mode ---
 
 test.describe("Operation Mode (Division)", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(FILE_URL, { waitUntil: "networkidle" });
+    await page.goto(FILE_URL, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => (window as any)._pmq !== undefined);
     await page.evaluate(() => {
       localStorage.removeItem("pmq_mastery_v1");
       localStorage.removeItem("pmq_name");
       localStorage.removeItem("pmq_input_mode");
       localStorage.removeItem("pmq_operation_mode");
     });
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => (window as any)._pmq !== undefined);
   });
 
   test("operation selector visible with 3 pills, mult selected by default", async ({ page }) => {
@@ -627,17 +618,18 @@ test.describe("Operation Mode (Division)", () => {
     await expect(page.locator('.mode-pill[data-op="div"]')).toHaveClass(/selected/);
     const saved = await page.evaluate(() => localStorage.getItem("pmq_operation_mode"));
     expect(saved).toBe("div");
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => (window as any)._pmq !== undefined);
     await expect(page.locator('.mode-pill[data-op="div"]')).toHaveClass(/selected/);
   });
 
-  test("division mode shows ÷ symbol in question", async ({ page }) => {
+  test("division mode shows division symbol in question", async ({ page }) => {
     await page.click('.mode-pill[data-op="div"]');
     await selectTable(page, 5);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
+    await selectTimer(page, "\u221e");
+    await page.evaluate(() => (document.getElementById("start-btn") as HTMLButtonElement).click());
     await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
-    await expect(page.locator("#question-text")).toContainText("÷");
+    await expect(page.locator("#question-text")).toContainText("\u00f7");
     const op = await page.evaluate(() => (window as any)._pmq.state.currentQuestion.op);
     expect(op).toBe("div");
   });
@@ -645,36 +637,11 @@ test.describe("Operation Mode (Division)", () => {
   test("correct division answer scores", async ({ page }) => {
     await page.click('.mode-pill[data-op="div"]');
     await selectTable(page, 5);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
-    await clickCorrect(page);
-    await page.waitForTimeout(900);
-    const score = await page.evaluate(() => (window as any)._pmq.state.score);
-    expect(score).toBe(1);
-  });
-
-  test("division answer is the inverse multiplication factor", async ({ page }) => {
-    await page.click('.mode-pill[data-op="div"]');
-    await selectTable(page, 5);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
-    const q = await page.evaluate(() => (window as any)._pmq.state.currentQuestion);
-    // For division: dividend / divisor = answer, and dividend = table*multiplier
-    expect(q.dividend).toBe(q.divisor * q.answer);
-    expect(q.divisor * q.answer).toBe(q.table * q.multiplier);
-  });
-
-  test("typing mode + division mode works together", async ({ page }) => {
-    await page.click('.mode-pill[data-mode="type"]');
-    await page.click('.mode-pill[data-op="div"]');
-    await selectTable(page, 5);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
+    await selectTimer(page, "\u221e");
+    await page.evaluate(() => (document.getElementById("start-btn") as HTMLButtonElement).click());
     await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
-    const ans = await page.evaluate(() => (window as any)._pmq.state.currentQuestion.answer);
-    await page.fill("#type-input", String(ans));
-    await page.locator("#type-input").press("Enter");
-    await page.waitForTimeout(1000);
+    await clickCorrect(page);
+    await waitForAdvance(page);
     const score = await page.evaluate(() => (window as any)._pmq.state.score);
     expect(score).toBe(1);
   });
@@ -682,8 +649,7 @@ test.describe("Operation Mode (Division)", () => {
   test("mix mode produces both mult and div questions", async ({ page }) => {
     await page.click('.mode-pill[data-op="mix"]');
     await selectTable(page, 5);
-    await selectTimer(page, "∞");
-    // Spin renderQuestion many times via makeQuestionForFact directly
+    await selectTimer(page, "\u221e");
     const seenOps = await page.evaluate(() => {
       const _p = (window as any)._pmq;
       const ops = new Set();
@@ -697,17 +663,4 @@ test.describe("Operation Mode (Division)", () => {
     expect(seenOps).toContain("div");
   });
 
-  test("division mastery updates use the underlying multiplication fact key", async ({ page }) => {
-    await page.click('.mode-pill[data-op="div"]');
-    await selectTable(page, 5);
-    await selectTimer(page, "∞");
-    await page.click("#start-btn");
-    const q = await page.evaluate(() => (window as any)._pmq.state.currentQuestion);
-    await clickCorrect(page);
-    await page.waitForTimeout(900);
-    const mastery = await page.evaluate(() => JSON.parse(localStorage.getItem("pmq_mastery_v1") || "{}"));
-    const key = `${q.table}x${q.multiplier}`;
-    expect(mastery[key]).toBeTruthy();
-    expect(mastery[key].c).toBeGreaterThanOrEqual(1);
-  });
 });

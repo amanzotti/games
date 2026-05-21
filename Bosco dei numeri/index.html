@@ -1,0 +1,1697 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bosco dei Numeri 🦊🌳</title>
+  <style>
+    :root {
+      --moss-100: #eaf6e2;
+      --moss-200: #d0ecc0;
+      --moss-300: #a8d98c;
+      --moss-500: #5fa55a;
+      --leaf-700: #2b6b30;
+      --bark-300: #d2a373;
+      --bark-500: #8a5a3b;
+      --sunny-300: #ffe28a;
+      --sunny-500: #f4b73c;
+      --berry-400: #d96e8f;
+      --sky-200: #c9e7f5;
+      --ink: #2b3a2b;
+      --good: #1f9d6a;
+      --bad: #cc4b4b;
+      --card: rgba(255, 255, 255, 0.92);
+      --shadow: 0 12px 35px rgba(50, 80, 30, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Comic Sans MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.75), transparent 22%),
+        radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.45), transparent 24%),
+        radial-gradient(circle at 80% 92%, rgba(255, 226, 138, 0.35), transparent 30%),
+        linear-gradient(160deg, #eaf6e2 0%, #d8ecc8 38%, #c5e2a8 72%, #e9efb6 100%);
+      overflow-x: hidden;
+    }
+
+    .sparkles { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+    .sparkle {
+      position: absolute; opacity: 0;
+      animation: driftUp linear infinite;
+      will-change: transform, opacity;
+    }
+    @keyframes driftUp {
+      0% { transform: translateY(15vh) scale(0.8); opacity: 0; }
+      10% { opacity: 0.75; }
+      80% { opacity: 0.85; }
+      100% { transform: translateY(-110vh) scale(1.15); opacity: 0; }
+    }
+
+    main {
+      position: relative; z-index: 2;
+      min-height: 100vh;
+      display: grid; place-items: center;
+      padding: 18px;
+    }
+
+    .screen {
+      width: min(920px, 96vw);
+      background: var(--card);
+      backdrop-filter: blur(5px);
+      border: 3px solid rgba(255, 255, 255, 0.7);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 3.4vw, 34px);
+      display: none;
+      animation: fadeIn 300ms ease-out;
+    }
+    .screen.active { display: block; }
+    @keyframes fadeIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: clamp(1.6rem, 4.5vw, 2.3rem);
+      color: var(--leaf-700);
+      text-shadow: 0 3px 0 rgba(255,255,255,0.6);
+    }
+    .subtitle {
+      text-align: center;
+      margin: 0 0 18px;
+      color: var(--bark-500);
+      font-size: clamp(0.95rem, 2.4vw, 1.05rem);
+    }
+
+    .welcome-grid {
+      display: grid;
+      gap: 14px;
+      margin: 0 auto 18px;
+      max-width: 720px;
+    }
+
+    .name-row {
+      display: flex; align-items: center; gap: 12px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .name-row label { font-weight: 700; color: var(--leaf-700); }
+    .name-row input {
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 2px solid var(--moss-200);
+      background: #fff;
+      font-size: 1rem;
+      min-width: 180px;
+      color: var(--ink);
+      outline: none;
+    }
+    .name-row input:focus { border-color: var(--moss-500); }
+
+    .table-row { text-align: center; }
+    .table-row > label {
+      display: block; margin-bottom: 8px;
+      font-weight: 700; color: var(--leaf-700);
+    }
+
+    .table-buttons {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    }
+    .table-btn {
+      padding: 10px 16px;
+      border-radius: 16px;
+      border: 2px solid var(--moss-200);
+      background: linear-gradient(180deg, #ffffff, #f0f8e8);
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 180ms ease;
+      min-width: 60px;
+    }
+    .table-btn:hover { transform: translateY(-2px); border-color: var(--moss-500); }
+    .table-btn.selected {
+      background: linear-gradient(180deg, var(--moss-300), var(--moss-500));
+      color: white; border-color: var(--leaf-700);
+      box-shadow: 0 6px 16px rgba(95, 165, 90, 0.4);
+    }
+    .table-btn.all-mode {
+      background: linear-gradient(180deg, #fff8e1, #ffe082);
+      border-color: var(--sunny-500);
+    }
+    .table-btn.all-mode.selected {
+      background: linear-gradient(180deg, var(--sunny-300), var(--sunny-500));
+      color: var(--bark-500);
+      border-color: var(--bark-500);
+    }
+
+    .mode-pill-group {
+      display: inline-flex; gap: 0; border-radius: 22px; padding: 4px;
+      background: var(--moss-100); border: 2px solid var(--moss-200);
+      flex-wrap: wrap;
+    }
+    .mode-pill {
+      padding: 8px 16px; font-size: 0.95rem; font-weight: 700;
+      border: none; background: transparent; color: var(--ink);
+      border-radius: 18px; cursor: pointer; transition: all 180ms ease;
+    }
+    .mode-pill.selected {
+      background: linear-gradient(180deg, var(--moss-300), var(--moss-500));
+      color: white; box-shadow: 0 4px 12px rgba(95, 165, 90, 0.35);
+    }
+
+    .btn-row {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
+      margin-top: 14px;
+    }
+    .primary-btn, .secondary-btn, .choice-btn, .type-submit-btn {
+      padding: 14px 28px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      border-radius: 22px;
+      border: none;
+      cursor: pointer;
+      transition: transform 150ms ease, box-shadow 150ms ease;
+      font-family: inherit;
+    }
+    .primary-btn {
+      background: linear-gradient(180deg, var(--moss-500), var(--leaf-700));
+      color: white;
+      box-shadow: 0 6px 16px rgba(43, 107, 48, 0.35);
+      letter-spacing: 0.04em;
+    }
+    .primary-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(43, 107, 48, 0.45); }
+    .primary-btn:disabled { opacity: 0.5; cursor: default; }
+    .secondary-btn {
+      background: linear-gradient(180deg, #fff, #f0f8e8);
+      color: var(--leaf-700);
+      border: 2px solid var(--moss-300);
+      box-shadow: 0 4px 12px rgba(50, 80, 30, 0.1);
+    }
+    .secondary-btn:hover { transform: translateY(-2px); }
+
+    .tiny-note {
+      text-align: center; color: var(--bark-500);
+      font-size: 0.92rem; margin-top: 10px;
+    }
+
+    /* Game screen */
+    .game-top {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
+    .score-box, .meta-box {
+      padding: 8px 16px;
+      border-radius: 16px;
+      background: var(--moss-100);
+      border: 2px solid var(--moss-200);
+      font-weight: 800;
+      color: var(--leaf-700);
+      font-size: 1rem;
+      transition: transform 200ms ease;
+    }
+    .score-box.pop { transform: scale(1.12); box-shadow: 0 0 18px rgba(95, 165, 90, 0.45); }
+
+    .timer-wrap {
+      height: 12px;
+      background: var(--moss-100);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      border: 1px solid var(--moss-200);
+    }
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--moss-300), var(--moss-500));
+      transition: width 80ms linear, background 200ms ease;
+    }
+
+    .question-card {
+      text-align: center;
+      padding: 18px;
+      border-radius: 22px;
+      margin: 14px 0;
+      background: linear-gradient(180deg, #ffffff, #f0f8e8);
+      border: 3px solid var(--moss-200);
+    }
+    .question-card h2 {
+      margin: 0 0 6px;
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      color: var(--bark-500);
+      font-weight: 700;
+    }
+    .question-text {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      color: var(--leaf-700);
+      margin: 6px 0;
+    }
+    .question-text.slide-in { animation: slideIn 300ms ease-out; }
+    @keyframes slideIn {
+      from { transform: translateX(-12px); opacity: 0.3; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .feedback {
+      min-height: 34px;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+    .feedback.good { color: var(--good); }
+    .feedback.bad { color: var(--bad); }
+    .streak-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--sunny-300), var(--sunny-500));
+      border: 2px solid var(--bark-500);
+      border-radius: 20px;
+      padding: 2px 12px;
+      margin-left: 8px;
+      font-size: 0.95rem;
+      animation: streakPop 350ms ease;
+    }
+    @keyframes streakPop {
+      0% { transform: scale(0.8); opacity: 0; }
+      60% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    .strategy-hint {
+      text-align: center;
+      margin: 8px auto 0;
+      max-width: 580px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #fff8e1, #ffefb8);
+      border: 2px solid var(--sunny-300);
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: #5d4015;
+      line-height: 1.5;
+      display: none;
+    }
+    .strategy-hint.visible { display: block; animation: fadeIn 300ms ease-out; }
+    .strategy-hint .hint-icon { font-size: 1.2rem; vertical-align: middle; margin-right: 4px; }
+
+    /* Tens-frame visual scaffold for "make 10" strategy */
+    .tens-frame {
+      display: inline-grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      padding: 6px;
+      background: white;
+      border: 2px solid var(--moss-300);
+      border-radius: 10px;
+      margin: 6px 4px;
+    }
+    .tens-frame .cell {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid var(--moss-300);
+      background: #fff;
+    }
+    .tens-frame .cell.filled-a { background: var(--moss-500); border-color: var(--leaf-700); }
+    .tens-frame .cell.filled-b { background: var(--berry-400); border-color: #a3375c; }
+
+    .choices {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(76px, 1fr));
+      gap: 10px;
+    }
+    .choices.hidden { display: none; }
+    .choice-btn {
+      padding: 15px 8px;
+      font-size: 1.15rem;
+      background: linear-gradient(180deg, #ffffff, #eef7e2);
+      border: 2px solid var(--moss-200);
+      min-height: 62px;
+      color: var(--ink);
+      font-weight: 800;
+    }
+    .choice-btn:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--moss-500); }
+    .choice-btn:disabled { cursor: default; }
+    .choice-btn.correct {
+      background: linear-gradient(180deg, #d9ffe7, #baf7d2);
+      border-color: #65cc9a;
+      color: #186a47;
+    }
+    .choice-btn.wrong {
+      background: linear-gradient(180deg, #ffd9d9, #ffc6c6);
+      border-color: #ff7d7d;
+      color: #8c2c2c;
+      animation: wobble 420ms ease;
+    }
+    @keyframes wobble {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      50% { transform: translateX(8px); }
+      75% { transform: translateX(-6px); }
+    }
+
+    .type-area {
+      margin-top: 12px; display: none; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .type-area.visible { display: flex; }
+    .type-input {
+      width: min(220px, 80%); height: 78px;
+      font-size: 2.6rem; font-weight: 800; text-align: center;
+      border-radius: 18px;
+      border: 3px solid var(--moss-200);
+      background: linear-gradient(180deg, #ffffff, #f0f8e8);
+      color: var(--ink);
+      letter-spacing: 0.05em;
+      box-shadow: 0 6px 18px rgba(95, 165, 90, 0.18);
+      outline: none;
+      transition: border-color 180ms ease, transform 180ms ease;
+      caret-color: var(--moss-500);
+      font-family: inherit;
+    }
+    .type-input:focus { border-color: var(--moss-500); transform: scale(1.02); }
+    .type-input.correct { border-color: #65cc9a; background: linear-gradient(180deg, #d9ffe7, #baf7d2); color: #186a47; }
+    .type-input.wrong { border-color: #ff7d7d; background: linear-gradient(180deg, #ffd9d9, #ffc6c6); color: #8c2c2c; animation: wobble 420ms ease; }
+    .type-submit-btn {
+      padding: 14px 38px;
+      font-size: 1.25rem;
+      background: linear-gradient(180deg, var(--moss-300), var(--moss-500));
+      color: white;
+      box-shadow: 0 6px 18px rgba(95, 165, 90, 0.35);
+      letter-spacing: 0.04em;
+    }
+    .type-submit-btn:active { transform: translateY(1px); }
+    .type-submit-btn:disabled { opacity: 0.5; cursor: default; }
+
+    .fox-wrap {
+      text-align: center;
+      margin-top: 18px;
+      position: relative;
+    }
+    .fox {
+      font-size: clamp(70px, 14vw, 110px);
+      display: inline-block;
+      animation: foxIdle 3s ease-in-out infinite;
+      filter: drop-shadow(0 4px 8px rgba(50,80,30,0.2));
+    }
+    @keyframes foxIdle {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(-2deg); }
+    }
+    .fox.dance {
+      animation: foxDance 600ms ease;
+    }
+    @keyframes foxDance {
+      0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+      25% { transform: translateY(-12px) rotate(-8deg) scale(1.1); }
+      50% { transform: translateY(-4px) rotate(6deg) scale(1.05); }
+      75% { transform: translateY(-10px) rotate(-4deg) scale(1.08); }
+    }
+
+    /* Results screen */
+    .results-stars {
+      margin: 16px 0;
+      text-align: center;
+      font-size: clamp(1.5rem, 4.5vw, 2.2rem);
+      letter-spacing: 0.06em;
+    }
+    .results-copy { text-align: center; font-size: 1rem; color: var(--bark-500); margin: 8px 0; }
+    .session-insights {
+      max-width: 560px;
+      margin: 12px auto;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: var(--moss-100);
+      border: 2px solid var(--moss-200);
+      font-size: 0.95rem;
+      color: var(--leaf-700);
+    }
+    .session-insights ul { margin: 6px 0 0; padding-left: 22px; }
+    .session-insights li { margin: 4px 0; }
+
+    /* Mastery grid */
+    .mastery-grid {
+      display: grid;
+      gap: 4px;
+      max-width: 560px;
+      margin: 12px auto;
+    }
+    .mastery-cell {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      background: #e0e0e0;
+      display: grid;
+      place-items: center;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: rgba(0,0,0,0.4);
+      border: 1.5px solid rgba(0,0,0,0.06);
+    }
+    .mastery-stats {
+      text-align: center;
+      font-weight: 700;
+      color: var(--leaf-700);
+      margin: 8px 0;
+    }
+    .mastery-progress {
+      max-width: 480px;
+      margin: 8px auto;
+      height: 14px;
+      background: #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .mastery-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--moss-300), var(--moss-500));
+      transition: width 400ms ease;
+    }
+    .mastery-legend {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      justify-content: center; font-size: 0.85rem;
+      color: var(--bark-500);
+      margin: 8px 0;
+    }
+    .legend-dot {
+      display: inline-block; width: 14px; height: 14px;
+      border-radius: 4px; vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    /* Top buttons */
+    .top-btn {
+      position: fixed; top: 14px; z-index: 100;
+      border: none; border-radius: 50%;
+      width: 48px; height: 48px;
+      font-size: 1.35rem;
+      background: var(--card);
+      box-shadow: 0 4px 14px rgba(50, 80, 30, 0.18);
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      display: grid; place-items: center;
+      border: 2px solid var(--moss-300);
+      text-decoration: none;
+    }
+    .top-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(50, 80, 30, 0.26); }
+    .home-btn { left: 14px; }
+    .mute-btn { right: 14px; }
+
+    @media (max-width: 520px) {
+      .choices { grid-template-columns: repeat(2, 1fr); }
+      .table-btn { min-width: 50px; padding: 10px 12px; font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <a href="../index.html" class="top-btn home-btn" aria-label="Torna ai giochi" title="Tutti i giochi">🏠</a>
+  <button class="top-btn mute-btn" id="mute-btn" aria-label="Attiva suono" title="Suono">🔇</button>
+  <div class="sparkles" id="sparkles"></div>
+
+  <main>
+    <!-- Welcome -->
+    <section class="screen active" id="welcome-screen" aria-label="Benvenuto">
+      <h1>Bosco dei Numeri 🦊🌳</h1>
+      <p class="subtitle">Esercitati con somme e sottrazioni nel bosco magico!</p>
+
+      <div class="welcome-grid">
+        <div class="name-row">
+          <label for="player-name">Il tuo nome</label>
+          <input id="player-name" type="text" maxlength="24" placeholder="Scrivi il tuo nome">
+        </div>
+
+        <div class="table-row">
+          <label>Operazione</label>
+          <div class="mode-pill-group" id="op-pill-group">
+            <button type="button" class="mode-pill selected" data-op="add">➕ Addizione</button>
+            <button type="button" class="mode-pill" data-op="sub">➖ Sottrazione</button>
+            <button type="button" class="mode-pill" data-op="mix">🎲 Mista</button>
+          </div>
+        </div>
+
+        <div class="table-row">
+          <label>Livello</label>
+          <div class="table-buttons" id="level-buttons"></div>
+        </div>
+
+        <div class="table-row">
+          <label>Tempo per ogni domanda</label>
+          <div class="table-buttons" id="timer-buttons"></div>
+        </div>
+
+        <div class="table-row">
+          <label>Modalità risposta</label>
+          <div class="mode-pill-group" id="mode-pill-group">
+            <button type="button" class="mode-pill selected" data-mode="choice">🎯 Scelta multipla</button>
+            <button type="button" class="mode-pill" data-mode="type">⌨️ Sfida: scrivi tu</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="primary-btn" id="start-btn" disabled>GIOCA 🌿</button>
+        <button class="secondary-btn" id="mastery-btn">📊 Progressi</button>
+      </div>
+      <p class="tiny-note" id="round-note">Scegli un livello per iniziare!</p>
+    </section>
+
+    <!-- Game -->
+    <section class="screen" id="game-screen" aria-label="Gioco">
+      <div class="game-top">
+        <div class="score-box" id="score-label">Punteggio: 0 ⭐</div>
+        <div class="meta-box" id="progress-label">Domanda 1 / 10</div>
+      </div>
+
+      <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+
+      <div class="question-card">
+        <h2 id="level-title">Livello 1</h2>
+        <div class="question-text" id="question-text">2 + 3 = ?</div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+      <div class="strategy-hint" id="strategy-hint"></div>
+      <div class="choices" id="choices"></div>
+      <div class="type-area" id="type-area">
+        <input id="type-input" class="type-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" aria-label="Scrivi la risposta">
+        <button type="button" class="type-submit-btn" id="type-submit-btn">OK 🌿</button>
+      </div>
+
+      <div class="fox-wrap"><div class="fox" id="fox" aria-hidden="true">🦊</div></div>
+
+      <div class="btn-row">
+        <button class="secondary-btn" id="exit-btn">Esci 🌿</button>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section class="screen" id="results-screen" aria-label="Risultati">
+      <div style="text-align:center; font-size:clamp(60px, 12vw, 90px);" id="results-fox">🦊</div>
+      <h1 id="results-title">Bravo!</h1>
+      <p class="subtitle" id="results-subtitle">Hai completato il round!</p>
+      <div class="results-stars" id="results-stars">⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐</div>
+      <p class="results-copy" id="results-copy">Punteggio: 0 / 10</p>
+      <div class="session-insights" id="session-insights" style="display:none;"></div>
+      <div class="btn-row">
+        <button class="primary-btn" id="play-again-btn">Ancora! 🌿</button>
+        <button class="secondary-btn" id="change-level-btn">Cambia livello</button>
+      </div>
+    </section>
+
+    <!-- Mastery -->
+    <section class="screen" id="mastery-screen" aria-label="Progressi">
+      <h1>I tuoi progressi 📊</h1>
+      <p class="subtitle">Ecco quali fatti conosci bene!</p>
+
+      <div class="mastery-stats" id="mastery-stats">Caricamento...</div>
+      <div class="mastery-progress"><div class="mastery-progress-fill" id="mastery-progress-fill" style="width:0%"></div></div>
+
+      <div class="mode-pill-group" id="mastery-op-pills" style="margin: 12px auto; display: flex; justify-content: center;">
+        <button type="button" class="mode-pill selected" data-mastery-op="add">➕ Addizione</button>
+        <button type="button" class="mode-pill" data-mastery-op="sub">➖ Sottrazione</button>
+      </div>
+
+      <div class="mastery-grid" id="mastery-grid"></div>
+
+      <div class="mastery-legend">
+        <span><span class="legend-dot" style="background:#e0e0e0;"></span>Nuovo</span>
+        <span><span class="legend-dot" style="background:#ff8a8a;"></span>Difficile</span>
+        <span><span class="legend-dot" style="background:#ffcc66;"></span>Quasi</span>
+        <span><span class="legend-dot" style="background:#82e082;"></span>Padroneggiato</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="primary-btn" id="mastery-back-btn">Indietro 🌿</button>
+        <button class="secondary-btn" id="mastery-reset-btn">🗑 Resetta</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // =====================================================
+    // Bosco dei Numeri — Addition/Subtraction within 20 game
+    // Pedagogy: NCTM fact-fluency strategies, 2nd-grade target
+    // =====================================================
+
+    const TEST_MODE = new URLSearchParams(location.search).has('test');
+    const TOTAL_QUESTIONS = 10;
+    const TIMER_OPTIONS = [0, 5, 8, 12];
+    const DEFAULT_TIMER = 0;
+
+    // Levels match Italian II elementare progression
+    const LEVELS = [
+      { id: 1, label: "Fino a 10",   max: 10, desc: "Somme e sottrazioni fino a 10" },
+      { id: 2, label: "Fino a 20",   max: 20, desc: "Somme e sottrazioni fino a 20" },
+      { id: 3, label: "Cambio decina", max: 20, crossTen: true, desc: "Solo facts che attraversano la decina (più difficili)" }
+    ];
+
+    // All addition facts: a+b where 0 <= a,b <= 10 (results 0..20)
+    // Stored as canonical key: "a+b" where a <= b
+    function buildAddFacts() {
+      const facts = [];
+      for (let a = 0; a <= 10; a++) {
+        for (let b = a; b <= 10; b++) {
+          facts.push({ a, b, sum: a + b });
+        }
+      }
+      return facts;
+    }
+    const ALL_ADD_FACTS = buildAddFacts();
+
+    // For subtraction: c - b = a where 0 <= a,b and c = a+b, c <= 20
+    // Same fact families: a+b=c gives c-a=b and c-b=a
+    function buildSubFacts() {
+      const facts = [];
+      for (let c = 0; c <= 20; c++) {
+        for (let b = 0; b <= Math.min(c, 10); b++) {
+          const a = c - b;
+          if (a <= 10) facts.push({ minuend: c, subtrahend: b, answer: a });
+        }
+      }
+      return facts;
+    }
+    const ALL_SUB_FACTS = buildSubFacts();
+
+    const screens = {
+      welcome: document.getElementById("welcome-screen"),
+      game:    document.getElementById("game-screen"),
+      results: document.getElementById("results-screen"),
+      mastery: document.getElementById("mastery-screen")
+    };
+
+    const elements = {
+      playerName: document.getElementById("player-name"),
+      levelButtons: document.getElementById("level-buttons"),
+      timerButtons: document.getElementById("timer-buttons"),
+      opPillGroup: document.getElementById("op-pill-group"),
+      modePillGroup: document.getElementById("mode-pill-group"),
+      roundNote: document.getElementById("round-note"),
+      startBtn: document.getElementById("start-btn"),
+      exitBtn: document.getElementById("exit-btn"),
+      scoreLabel: document.getElementById("score-label"),
+      progressLabel: document.getElementById("progress-label"),
+      levelTitle: document.getElementById("level-title"),
+      questionText: document.getElementById("question-text"),
+      feedback: document.getElementById("feedback"),
+      strategyHint: document.getElementById("strategy-hint"),
+      choices: document.getElementById("choices"),
+      typeArea: document.getElementById("type-area"),
+      typeInput: document.getElementById("type-input"),
+      typeSubmitBtn: document.getElementById("type-submit-btn"),
+      timerBar: document.getElementById("timer-bar"),
+      fox: document.getElementById("fox"),
+      resultsFox: document.getElementById("results-fox"),
+      resultsTitle: document.getElementById("results-title"),
+      resultsSubtitle: document.getElementById("results-subtitle"),
+      resultsStars: document.getElementById("results-stars"),
+      resultsCopy: document.getElementById("results-copy"),
+      sessionInsights: document.getElementById("session-insights"),
+      playAgainBtn: document.getElementById("play-again-btn"),
+      changeLevelBtn: document.getElementById("change-level-btn"),
+      sparkles: document.getElementById("sparkles"),
+      muteBtn: document.getElementById("mute-btn"),
+      masteryBtn: document.getElementById("mastery-btn"),
+      masteryGrid: document.getElementById("mastery-grid"),
+      masteryStats: document.getElementById("mastery-stats"),
+      masteryProgressFill: document.getElementById("mastery-progress-fill"),
+      masteryOpPills: document.getElementById("mastery-op-pills"),
+      masteryBackBtn: document.getElementById("mastery-back-btn"),
+      masteryResetBtn: document.getElementById("mastery-reset-btn")
+    };
+
+    const state = {
+      playerName: "Amico",
+      selectedLevel: null,
+      selectedTimer: DEFAULT_TIMER,
+      operationMode: "add", // "add" | "sub" | "mix"
+      inputMode: "choice",  // "choice" | "type"
+      typeAttempts: 0,
+      score: 0,
+      streak: 0,
+      questionIndex: 0,
+      questions: [],
+      currentQuestion: null,
+      timerHandle: null,
+      choiceLocked: false,
+      secondsLeft: DEFAULT_TIMER,
+      sessionResults: [],
+      masteryViewOp: "add"
+    };
+
+    const praiseTexts = ["Bravissimo!", "Fantastico!", "Che bravo! 🌟", "Perfetto!", "Grande! 🌿", "Sei una stella! ✨"];
+
+    // ─── Mastery tracking ─────────────────────────────────────
+    const MASTERY_KEY = "bdn_mastery_v1";
+
+    function factKey(op, a, b) {
+      // Canonical: for addition, smaller first. For subtraction, store as "c-b" (e.g. "14-8")
+      if (op === "add") {
+        const lo = Math.min(a, b), hi = Math.max(a, b);
+        return `add:${lo}+${hi}`;
+      }
+      return `sub:${a}-${b}`; // a is minuend, b is subtrahend
+    }
+
+    function loadMastery() {
+      try {
+        const raw = localStorage.getItem(MASTERY_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (_) { return {}; }
+    }
+    function saveMastery(data) {
+      try { localStorage.setItem(MASTERY_KEY, JSON.stringify(data)); } catch (_) {}
+    }
+
+    function recordFactResult(key, correct) {
+      const data = loadMastery();
+      if (!data[key]) data[key] = { c: 0, a: 0 };
+      data[key].a += 1;
+      if (correct) data[key].c += 1;
+      data[key].t = Date.now();
+      saveMastery(data);
+    }
+
+    function getMasteryLevel(entry) {
+      if (!entry || entry.a === 0) return 0;
+      const ratio = entry.c / entry.a;
+      if (ratio < 0.5) return 1;
+      if (ratio < 0.8) return 2;
+      if (entry.a >= 3 && ratio >= 0.8) return 3;
+      return 2;
+    }
+
+    function getMasteryColor(level) {
+      return ["#e0e0e0", "#ff8a8a", "#ffcc66", "#82e082"][level] || "#e0e0e0";
+    }
+
+    function countMasteredForOp(op) {
+      const data = loadMastery();
+      const facts = op === "add" ? ALL_ADD_FACTS : ALL_SUB_FACTS;
+      let count = 0;
+      facts.forEach(f => {
+        const k = op === "add" ? factKey("add", f.a, f.b) : factKey("sub", f.minuend, f.subtrahend);
+        const entry = data[k];
+        if (entry && entry.a >= 3 && (entry.c / entry.a) >= 0.8) count++;
+      });
+      return { count, total: facts.length };
+    }
+
+    // ─── Audio ─────────────────────────────────────────────────
+    let audioCtx = null;
+    let soundEnabled = false;
+
+    function ensureAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    }
+    function toggleMute() {
+      soundEnabled = !soundEnabled;
+      elements.muteBtn.textContent = soundEnabled ? "🔊" : "🔇";
+      elements.muteBtn.setAttribute("aria-label", soundEnabled ? "Disattiva suono" : "Attiva suono");
+      if (soundEnabled) { ensureAudio(); playSound("click"); }
+      else if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    }
+    elements.muteBtn.addEventListener("click", toggleMute);
+
+    function tone(freq, duration, type = "sine", volume = 0.18, delay = 0) {
+      if (!soundEnabled || !audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(volume, audioCtx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + delay);
+      osc.stop(audioCtx.currentTime + delay + duration);
+    }
+    function playSound(name) {
+      if (TEST_MODE || !soundEnabled) return;
+      ensureAudio();
+      switch (name) {
+        case "click": tone(880, 0.07, "sine", 0.10); break;
+        case "correct": tone(523, 0.14, "sine", 0.18); tone(659, 0.20, "sine", 0.18, 0.11); break;
+        case "wrong": tone(280, 0.22, "triangle", 0.12); break;
+        case "timeout": tone(180, 0.3, "sawtooth", 0.10); break;
+        case "fanfare":
+          tone(523, 0.16, "sine", 0.15, 0);
+          tone(659, 0.16, "sine", 0.15, 0.13);
+          tone(784, 0.16, "sine", 0.15, 0.26);
+          tone(1047, 0.30, "sine", 0.18, 0.39);
+          break;
+        case "perfect":
+          tone(523, 0.12, "sine", 0.15, 0);
+          tone(659, 0.12, "sine", 0.15, 0.10);
+          tone(784, 0.12, "sine", 0.15, 0.20);
+          tone(1047, 0.18, "sine", 0.17, 0.30);
+          tone(1175, 0.12, "sine", 0.13, 0.46);
+          tone(1319, 0.36, "sine", 0.18, 0.58);
+          break;
+      }
+    }
+
+    // Italian voice (prefers Alice/Federica/etc)
+    let _preferredVoice = null;
+    function pickItalianVoice() {
+      if (_preferredVoice) return _preferredVoice;
+      if (!("speechSynthesis" in window)) return null;
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices.length) return null;
+      const italian = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("it"));
+      if (!italian.length) return null;
+      const preferred = ["Alice", "Federica", "Luca", "Paola", "Carla", "Cosimo", "Giuseppe", "Elsa"];
+      for (const name of preferred) {
+        const m = italian.find(v => v.name && v.name.toLowerCase().includes(name.toLowerCase()));
+        if (m) { _preferredVoice = m; return m; }
+      }
+      const enhanced = italian.find(v => /enhanced|premium|natural|neural/i.test(v.name));
+      if (enhanced) { _preferredVoice = enhanced; return enhanced; }
+      const local = italian.find(v => v.localService);
+      _preferredVoice = local || italian[0];
+      return _preferredVoice;
+    }
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.addEventListener("voiceschanged", () => { _preferredVoice = null; pickItalianVoice(); });
+      pickItalianVoice();
+    }
+    function speak(text) {
+      if (TEST_MODE || !soundEnabled || !("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "it-IT"; u.rate = 0.85; u.pitch = 1.1;
+      const voice = pickItalianVoice();
+      if (voice) u.voice = voice;
+      window.speechSynthesis.speak(u);
+    }
+
+    // ─── Sparkles background (leaves & flowers) ───────────────
+    function createSparkles() {
+      const symbols = ["🍃", "🌿", "🌸", "🌼", "🍀", "🌱", "🦋"];
+      for (let i = 0; i < 18; i++) {
+        const s = document.createElement("span");
+        s.className = "sparkle";
+        s.textContent = symbols[i % symbols.length];
+        s.style.left = Math.random() * 100 + "%";
+        s.style.fontSize = (14 + Math.random() * 18) + "px";
+        s.style.animationDuration = (8 + Math.random() * 10) + "s";
+        s.style.animationDelay = (Math.random() * 10) + "s";
+        elements.sparkles.appendChild(s);
+      }
+    }
+
+    // ─── Pedagogy: strategy hints in Italian ──────────────────
+    // For each fact, choose the most appropriate strategy.
+    function getAdditionStrategy(a, b) {
+      const sum = a + b;
+      const lo = Math.min(a, b), hi = Math.max(a, b);
+      // +0
+      if (lo === 0) return `Sommare zero non cambia il numero! ${hi} + 0 = ${hi}`;
+      // +1, +2
+      if (lo === 1) return `Conta avanti di 1: parti da ${hi}, fai un passo → ${sum}!`;
+      if (lo === 2) return `Conta avanti di 2: parti da ${hi}, fai due passi → ${sum}!`;
+      // Doubles
+      if (a === b) return `Trucco dei doppi! ${a} + ${a} = ${sum}. Ricordati: i doppi sono facili!`;
+      // Near doubles (differ by 1)
+      if (Math.abs(a - b) === 1) {
+        const smaller = lo, bigger = hi;
+        return `Quasi-doppio! Sai che ${smaller} + ${smaller} = ${smaller*2}, aggiungi 1 → ${sum}!`;
+      }
+      // Make 10 strategy (when crossing 10)
+      if (sum > 10 && hi >= 6) {
+        const toTen = 10 - hi;
+        const remaining = lo - toTen;
+        return `Trucco del FAI 10! ${hi} + ${toTen} = 10, poi 10 + ${remaining} = ${sum}. Spezza il numero piccolo!`;
+      }
+      // Add 10
+      if (lo === 10 || hi === 10) {
+        const other = lo === 10 ? hi : lo;
+        return `Sommare 10: metti l'1 davanti! 10 + ${other} = 1${other === 0 ? "0" : other}`;
+      }
+      // Generic small sum
+      return `Conta avanti partendo da ${hi}: ${[...Array(lo)].map((_,i) => hi+i+1).join(", ")} → ${sum}!`;
+    }
+
+    function getSubtractionStrategy(minuend, subtrahend) {
+      const answer = minuend - subtrahend;
+      // -0
+      if (subtrahend === 0) return `Togliere zero non cambia il numero! ${minuend} − 0 = ${minuend}`;
+      // -1, -2
+      if (subtrahend === 1) return `Conta indietro di 1: da ${minuend} fai un passo indietro → ${answer}!`;
+      if (subtrahend === 2) return `Conta indietro di 2: da ${minuend} fai due passi indietro → ${answer}!`;
+      // Same (n - n = 0)
+      if (subtrahend === minuend) return `Quando togli tutto, resta zero! ${minuend} − ${minuend} = 0`;
+      // Doubles inverse: 12 - 6 = 6, 14 - 7 = 7, etc.
+      if (answer === subtrahend) return `Trucco del doppio al contrario! Sai che ${answer} + ${answer} = ${minuend}, quindi ${minuend} − ${subtrahend} = ${answer}!`;
+      // -10
+      if (subtrahend === 10) return `Togliere 10: togli l'1 davanti! ${minuend} − 10 = ${answer}`;
+      // Subtract through 10 (make-ten for subtraction)
+      if (minuend > 10 && subtrahend > minuend - 10) {
+        const toTen = minuend - 10;
+        const remaining = subtrahend - toTen;
+        return `Trucco del FINO A 10! ${minuend} − ${toTen} = 10, poi 10 − ${remaining} = ${answer}. Spezza il sottraendo!`;
+      }
+      // Think addition: a + ? = c
+      return `Pensa al fatto inverso: ${subtrahend} + ${answer} = ${minuend}. Quindi ${minuend} − ${subtrahend} = ${answer}!`;
+    }
+
+    function makeStrategyHint(currentQ) {
+      if (currentQ.op === "add") {
+        return getAdditionStrategy(currentQ.a, currentQ.b);
+      }
+      return getSubtractionStrategy(currentQ.minuend, currentQ.subtrahend);
+    }
+
+    function shouldShowHint(key) {
+      const data = loadMastery();
+      const entry = data[key];
+      if (!entry) return true;
+      return entry.a >= 2 && (entry.c / entry.a) < 0.6;
+    }
+
+    // Optional tens-frame visual for make-10 strategy
+    function makeTensFrameHtml(filledA, filledB) {
+      // 10 cells: first `filledA` filled with color A, next `filledB` with color B, rest empty
+      let cells = "";
+      for (let i = 0; i < 10; i++) {
+        if (i < filledA) cells += '<span class="cell filled-a"></span>';
+        else if (i < filledA + filledB) cells += '<span class="cell filled-b"></span>';
+        else cells += '<span class="cell"></span>';
+      }
+      return `<span class="tens-frame">${cells}</span>`;
+    }
+
+    function showStrategyHint(currentQ) {
+      const key = currentQ.recordKey;
+      if (!shouldShowHint(key)) {
+        elements.strategyHint.className = "strategy-hint";
+        return false;
+      }
+      let hint = makeStrategyHint(currentQ);
+      // For "make 10" strategies, add tens-frame visualization
+      if (currentQ.op === "add" && currentQ.a + currentQ.b > 10) {
+        const lo = Math.min(currentQ.a, currentQ.b);
+        const hi = Math.max(currentQ.a, currentQ.b);
+        const toTen = 10 - hi;
+        if (toTen > 0 && toTen <= lo) {
+          hint += "<br>" + makeTensFrameHtml(hi, toTen);
+        }
+      }
+      elements.strategyHint.innerHTML = `<span class="hint-icon">💡</span> ${hint}`;
+      elements.strategyHint.className = "strategy-hint visible";
+      setTimeout(() => {
+        // Strip HTML for speech
+        const tmp = document.createElement("div");
+        tmp.innerHTML = hint;
+        speak(tmp.textContent || "");
+      }, 600);
+      return true;
+    }
+
+    function hideStrategyHint() {
+      elements.strategyHint.className = "strategy-hint";
+    }
+
+    // ─── Question generation ──────────────────────────────────
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function makeAdditionQuestion(level) {
+      let candidates = ALL_ADD_FACTS.filter(f => f.sum <= level.max);
+      if (level.crossTen) {
+        candidates = candidates.filter(f => f.sum > 10 && f.a > 0 && f.b > 0);
+      }
+      const f = candidates[Math.floor(Math.random() * candidates.length)];
+      // Random operand order for display
+      const swap = Math.random() < 0.5;
+      const a = swap ? f.b : f.a;
+      const b = swap ? f.a : f.b;
+      return {
+        op: "add",
+        a, b,
+        answer: f.sum,
+        display: `${a} + ${b} = ?`,
+        spoken: `Quanto fa ${a} più ${b}?`,
+        recordKey: factKey("add", f.a, f.b)
+      };
+    }
+
+    function makeSubtractionQuestion(level) {
+      let candidates = ALL_SUB_FACTS.filter(f => f.minuend <= level.max);
+      if (level.crossTen) {
+        // Subtraction that crosses 10: minuend > 10 and answer < 10 (i.e., subtrahend > minuend-10)
+        candidates = candidates.filter(f => f.minuend > 10 && f.answer < 10 && f.subtrahend > 0 && f.answer > 0);
+      }
+      // Filter out trivial 0-subtractions to keep interesting (but allow a few)
+      const f = candidates[Math.floor(Math.random() * candidates.length)];
+      return {
+        op: "sub",
+        minuend: f.minuend,
+        subtrahend: f.subtrahend,
+        answer: f.answer,
+        display: `${f.minuend} − ${f.subtrahend} = ?`,
+        spoken: `Quanto fa ${f.minuend} meno ${f.subtrahend}?`,
+        recordKey: factKey("sub", f.minuend, f.subtrahend)
+      };
+    }
+
+    function makeQuestion(level) {
+      let op = state.operationMode;
+      if (op === "mix") op = Math.random() < 0.5 ? "add" : "sub";
+      return op === "add" ? makeAdditionQuestion(level) : makeSubtractionQuestion(level);
+    }
+
+    // Adaptive: prefer struggling facts when player has history
+    function generateQuestions(count) {
+      const level = LEVELS.find(l => l.id === state.selectedLevel) || LEVELS[0];
+      const data = loadMastery();
+
+      // Pool of facts at this level for current op (or mix)
+      function poolFor(op) {
+        let candidates;
+        if (op === "add") {
+          candidates = ALL_ADD_FACTS.filter(f => f.sum <= level.max);
+          if (level.crossTen) candidates = candidates.filter(f => f.sum > 10 && f.a > 0 && f.b > 0);
+          return candidates.map(f => ({ op: "add", fact: f, key: factKey("add", f.a, f.b) }));
+        }
+        candidates = ALL_SUB_FACTS.filter(f => f.minuend <= level.max);
+        if (level.crossTen) candidates = candidates.filter(f => f.minuend > 10 && f.answer < 10 && f.subtrahend > 0 && f.answer > 0);
+        return candidates.map(f => ({ op: "sub", fact: f, key: factKey("sub", f.minuend, f.subtrahend) }));
+      }
+
+      let pool;
+      if (state.operationMode === "mix") {
+        pool = [...poolFor("add"), ...poolFor("sub")];
+      } else {
+        pool = poolFor(state.operationMode);
+      }
+
+      // Bucket facts
+      const struggling = [], needsWork = [], newOnes = [], mastered = [];
+      pool.forEach(p => {
+        const entry = data[p.key];
+        if (!entry || entry.a === 0) { newOnes.push(p); return; }
+        const ratio = entry.c / entry.a;
+        if (ratio < 0.5) struggling.push(p);
+        else if (ratio < 0.8) needsWork.push(p);
+        else mastered.push(p);
+      });
+
+      const result = [];
+      function pickRandom(arr, n) {
+        const shuffled = shuffle(arr);
+        return shuffled.slice(0, Math.min(n, shuffled.length));
+      }
+      // 40% struggling, 30% needs work, 20% new (up to 4), fill with random
+      const targetStruggling = Math.floor(count * 0.4);
+      const targetNeeds = Math.floor(count * 0.3);
+      const targetNew = Math.min(4, Math.floor(count * 0.2));
+      result.push(...pickRandom(struggling, targetStruggling));
+      result.push(...pickRandom(needsWork, targetNeeds));
+      result.push(...pickRandom(newOnes, targetNew));
+      // Fill remaining randomly from all
+      while (result.length < count && pool.length > 0) {
+        const remaining = pool.filter(p => !result.includes(p));
+        if (remaining.length === 0) break;
+        result.push(remaining[Math.floor(Math.random() * remaining.length)]);
+      }
+      return shuffle(result).slice(0, count);
+    }
+
+    function buildQuestionFromPoolItem(item) {
+      if (item.op === "add") {
+        const swap = Math.random() < 0.5;
+        const a = swap ? item.fact.b : item.fact.a;
+        const b = swap ? item.fact.a : item.fact.b;
+        return {
+          op: "add",
+          a, b,
+          answer: item.fact.sum,
+          display: `${a} + ${b} = ?`,
+          spoken: `Quanto fa ${a} più ${b}?`,
+          recordKey: item.key
+        };
+      }
+      return {
+        op: "sub",
+        minuend: item.fact.minuend,
+        subtrahend: item.fact.subtrahend,
+        answer: item.fact.answer,
+        display: `${item.fact.minuend} − ${item.fact.subtrahend} = ?`,
+        spoken: `Quanto fa ${item.fact.minuend} meno ${item.fact.subtrahend}?`,
+        recordKey: item.key
+      };
+    }
+
+    // ─── Distractors for multiple choice ──────────────────────
+    function makeDistractors(answer, op) {
+      const candidates = new Set();
+      // Off-by-one and small offsets
+      for (let d of [-3, -2, -1, 1, 2, 3]) {
+        const c = answer + d;
+        if (c >= 0 && c !== answer) candidates.add(c);
+      }
+      // ±10 confusion
+      if (answer + 10 <= 30) candidates.add(answer + 10);
+      if (answer - 10 >= 0) candidates.add(answer - 10);
+      // Fill with random nearby
+      while (candidates.size < 8) {
+        const offset = Math.floor(Math.random() * 11) - 5;
+        const c = answer + offset;
+        if (c >= 0 && c !== answer) candidates.add(c);
+      }
+      return shuffle([...candidates]).slice(0, 3);
+    }
+
+    function createOptions(answer, op) {
+      const distractors = makeDistractors(answer, op);
+      return { answer, options: shuffle([answer, ...distractors]) };
+    }
+
+    // ─── UI builders ──────────────────────────────────────────
+    function buildLevelButtons() {
+      LEVELS.forEach(lvl => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "table-btn";
+        btn.textContent = lvl.label;
+        btn.dataset.levelId = String(lvl.id);
+        btn.addEventListener("click", () => selectLevel(lvl.id));
+        elements.levelButtons.appendChild(btn);
+      });
+    }
+
+    function selectLevel(id) {
+      state.selectedLevel = id;
+      [...elements.levelButtons.children].forEach(b => {
+        b.classList.toggle("selected", Number(b.dataset.levelId) === id);
+      });
+      elements.startBtn.disabled = false;
+      updateRoundNote();
+    }
+
+    function buildTimerButtons() {
+      TIMER_OPTIONS.forEach(seconds => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "table-btn";
+        btn.textContent = seconds === 0 ? "∞" : `${seconds}s`;
+        if (seconds === DEFAULT_TIMER) btn.classList.add("selected");
+        btn.addEventListener("click", () => selectTimer(seconds));
+        elements.timerButtons.appendChild(btn);
+      });
+    }
+
+    function selectTimer(seconds) {
+      state.selectedTimer = seconds;
+      const label = seconds === 0 ? "∞" : `${seconds}s`;
+      [...elements.timerButtons.children].forEach(b => {
+        b.classList.toggle("selected", b.textContent === label);
+      });
+      updateRoundNote();
+    }
+
+    function updateRoundNote() {
+      if (!state.selectedLevel) {
+        elements.roundNote.textContent = "Scegli un livello per iniziare!";
+        return;
+      }
+      const lvl = LEVELS.find(l => l.id === state.selectedLevel);
+      const timeText = state.selectedTimer === 0 ? "senza tempo" : `${state.selectedTimer}s per domanda`;
+      const opLabel = state.operationMode === "add" ? "addizioni" : state.operationMode === "sub" ? "sottrazioni" : "somme e sottrazioni";
+      elements.roundNote.textContent = `${lvl.desc}. ${TOTAL_QUESTIONS} ${opLabel}, ${timeText}.`;
+    }
+
+    function updateOpPillStyles() {
+      [...elements.opPillGroup.children].forEach(b => {
+        b.classList.toggle("selected", b.dataset.op === state.operationMode);
+      });
+    }
+    function selectOperationMode(op) {
+      if (op !== "add" && op !== "sub" && op !== "mix") return;
+      state.operationMode = op;
+      try { localStorage.setItem("bdn_op_mode", op); } catch (_) {}
+      updateOpPillStyles();
+      updateRoundNote();
+    }
+
+    function updateModePillStyles() {
+      [...elements.modePillGroup.children].forEach(b => {
+        b.classList.toggle("selected", b.dataset.mode === state.inputMode);
+      });
+    }
+    function selectInputMode(mode) {
+      if (mode !== "choice" && mode !== "type") return;
+      state.inputMode = mode;
+      try { localStorage.setItem("bdn_input_mode", mode); } catch (_) {}
+      updateModePillStyles();
+    }
+
+    // ─── Game flow ────────────────────────────────────────────
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.remove("active"));
+      screens[name].classList.add("active");
+    }
+
+    function startGame() {
+      state.score = 0;
+      state.streak = 0;
+      state.questionIndex = 0;
+      state.sessionResults = [];
+      try { localStorage.setItem("bdn_name", state.playerName); } catch (_) {}
+
+      const pool = generateQuestions(TOTAL_QUESTIONS);
+      state.questions = pool.map(buildQuestionFromPoolItem);
+
+      const lvl = LEVELS.find(l => l.id === state.selectedLevel);
+      elements.levelTitle.textContent = lvl.label;
+      showScreen("game");
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      if (state.questionIndex >= state.questions.length) {
+        finishRound();
+        return;
+      }
+      const q = state.questions[state.questionIndex];
+      state.currentQuestion = q;
+      state.typeAttempts = 0;
+      state.choiceLocked = false;
+
+      elements.questionText.textContent = q.display;
+      elements.questionText.classList.remove("slide-in");
+      void elements.questionText.offsetWidth;
+      elements.questionText.classList.add("slide-in");
+      setFeedback("");
+      hideStrategyHint();
+      updateHud();
+      speak(q.spoken);
+
+      if (state.inputMode === "type") {
+        showTypeArea();
+        resetTypeInput();
+        elements.typeInput.focus();
+      } else {
+        showChoicesArea();
+        const { options } = createOptions(q.answer, q.op);
+        renderChoices(options, q.answer);
+      }
+      startTimer();
+    }
+
+    function setFeedback(text, type = "") {
+      elements.feedback.innerHTML = text;
+      elements.feedback.className = "feedback" + (type ? " " + type : "");
+    }
+
+    function updateHud() {
+      elements.scoreLabel.textContent = `Punteggio: ${state.score} ⭐`;
+      elements.progressLabel.textContent = `Domanda ${state.questionIndex + 1} / ${state.questions.length}`;
+    }
+
+    function showChoicesArea() {
+      elements.choices.classList.remove("hidden");
+      elements.typeArea.classList.remove("visible");
+    }
+    function showTypeArea() {
+      elements.choices.classList.add("hidden");
+      elements.typeArea.classList.add("visible");
+    }
+    function resetTypeInput() {
+      elements.typeInput.value = "";
+      elements.typeInput.disabled = false;
+      elements.typeInput.classList.remove("correct", "wrong");
+      elements.typeSubmitBtn.disabled = false;
+    }
+
+    function renderChoices(options, answer) {
+      elements.choices.innerHTML = "";
+      options.forEach(value => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "choice-btn";
+        b.textContent = value;
+        b.addEventListener("click", () => handleAnswer(value, false, b));
+        elements.choices.appendChild(b);
+      });
+    }
+
+    function lockChoices() {
+      state.choiceLocked = true;
+      [...elements.choices.children].forEach(b => { b.disabled = true; });
+    }
+
+    function markCorrectChoice(answer) {
+      [...elements.choices.children].forEach(b => {
+        if (Number(b.textContent) === answer) b.classList.add("correct");
+      });
+    }
+
+    function clearTimer() {
+      if (state.timerHandle) { clearInterval(state.timerHandle); state.timerHandle = null; }
+    }
+    function startTimer() {
+      clearTimer();
+      const duration = state.selectedTimer;
+      if (duration === 0) {
+        elements.timerBar.style.width = "100%";
+        return;
+      }
+      state.secondsLeft = duration;
+      elements.timerBar.style.width = "100%";
+      const started = performance.now();
+      state.timerHandle = setInterval(() => {
+        const elapsed = (performance.now() - started) / 1000;
+        const left = Math.max(0, duration - elapsed);
+        state.secondsLeft = left;
+        const pct = (left / duration) * 100;
+        elements.timerBar.style.width = `${pct}%`;
+        if (pct < 30) {
+          elements.timerBar.style.background = "linear-gradient(90deg, #ff6b6b, #ff8f9e)";
+        } else {
+          elements.timerBar.style.background = "";
+        }
+        if (left <= 0) {
+          clearTimer();
+          handleAnswer(null, true, null);
+        }
+      }, 80);
+    }
+
+    function celebrateCorrect() {
+      const msg = praiseTexts[Math.floor(Math.random() * praiseTexts.length)];
+      state.streak += 1;
+      let streakText = "";
+      if (state.streak >= 3) streakText = ` <span class="streak-badge">🔥 Serie di ${state.streak}!</span>`;
+      setFeedback(`<span class="good">${msg} +1 ⭐</span>${streakText}`, "good");
+      playSound("correct");
+      elements.scoreLabel.classList.add("pop");
+      setTimeout(() => elements.scoreLabel.classList.remove("pop"), 250);
+      elements.fox.classList.remove("dance");
+      void elements.fox.offsetWidth;
+      elements.fox.classList.add("dance");
+      if (typeof confetti === "function" && !TEST_MODE) {
+        confetti({ particleCount: 70, spread: 80, origin: { y: 0.7 } });
+      }
+    }
+
+    function handleAnswer(value, timedOut, clickedButton) {
+      if (state.choiceLocked) return;
+      clearTimer();
+      lockChoices();
+
+      const q = state.currentQuestion;
+      const isCorrect = value === q.answer;
+      recordFactResult(q.recordKey, isCorrect);
+      state.sessionResults.push({ key: q.recordKey, correct: isCorrect });
+
+      if (isCorrect) {
+        state.score += 1;
+        celebrateCorrect();
+        speak("Bravissimo!");
+        updateHud();
+        setTimeout(nextQuestion, TEST_MODE ? 50 : 850);
+        return;
+      }
+
+      // Wrong
+      state.streak = 0;
+      if (clickedButton) clickedButton.classList.add("wrong");
+      markCorrectChoice(q.answer);
+      const factStr = q.display.replace(" = ?", ` = ${q.answer}`);
+      const spoken = q.op === "add"
+        ? `${q.a} più ${q.b} fa ${q.answer}.`
+        : `${q.minuend} meno ${q.subtrahend} fa ${q.answer}.`;
+      if (timedOut) {
+        setFeedback(`Tempo scaduto! ${factStr} ⏰`, "bad");
+        playSound("timeout");
+        speak(`Tempo scaduto. ${spoken}`);
+      } else {
+        setFeedback(`Quasi! ${factStr} 🍃`, "bad");
+        playSound("wrong");
+        speak(`Quasi! ${spoken}`);
+      }
+
+      // Re-queue wrong fact later in the round (spaced)
+      const retryPos = Math.min(
+        state.questionIndex + 3 + Math.floor(Math.random() * 3),
+        state.questions.length
+      );
+      const sameItem = state.questions[state.questionIndex];
+      state.questions.splice(retryPos, 0, sameItem);
+
+      const hintShown = showStrategyHint(q);
+      updateHud();
+      setTimeout(nextQuestion, TEST_MODE ? 50 : (hintShown ? 4500 : 950));
+    }
+
+    function submitTypedAnswer() {
+      if (state.choiceLocked) return;
+      const raw = (elements.typeInput.value || "").trim();
+      if (raw === "") {
+        setFeedback("Scrivi un numero, poi tocca OK 🍃", "bad");
+        elements.typeInput.focus();
+        return;
+      }
+      const value = Number(raw);
+      if (!Number.isFinite(value)) {
+        setFeedback("Scrivi solo numeri 🍃", "bad");
+        elements.typeInput.focus();
+        return;
+      }
+      const correct = value === state.currentQuestion.answer;
+      if (correct) {
+        elements.typeInput.classList.add("correct");
+        elements.typeInput.disabled = true;
+        elements.typeSubmitBtn.disabled = true;
+        handleAnswer(value, false, null);
+        return;
+      }
+      state.typeAttempts += 1;
+      elements.typeInput.classList.remove("wrong");
+      void elements.typeInput.offsetWidth;
+      elements.typeInput.classList.add("wrong");
+      playSound("wrong");
+      if (state.typeAttempts === 1) {
+        setFeedback("Quasi! Controlla bene e riprova 🍃", "bad");
+        speak("Quasi! Riprova.");
+        setTimeout(() => {
+          elements.typeInput.classList.remove("wrong");
+          elements.typeInput.value = "";
+          elements.typeInput.focus();
+        }, 600);
+        return;
+      }
+      elements.typeInput.disabled = true;
+      elements.typeSubmitBtn.disabled = true;
+      handleAnswer(value, false, null);
+    }
+
+    function nextQuestion() {
+      state.questionIndex += 1;
+      renderQuestion();
+    }
+
+    function buildStars(score, total) {
+      return "⭐".repeat(score) + "☆".repeat(Math.max(0, total - score));
+    }
+
+    function fireworkCelebration() {
+      if (TEST_MODE) return;
+      if (typeof confetti !== "function") return;
+      const end = Date.now() + 1300;
+      const colors = ["#5fa55a", "#f4b73c", "#d96e8f", "#c9e7f5", "#fff"];
+      (function frame() {
+        confetti({ particleCount: 4, angle: 60, spread: 70, origin: { x: 0, y: 0.6 }, colors });
+        confetti({ particleCount: 4, angle: 120, spread: 70, origin: { x: 1, y: 0.6 }, colors });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    }
+
+    function finishRound() {
+      clearTimer();
+      const pct = state.score / TOTAL_QUESTIONS;
+      let title, sub;
+      if (pct >= 0.9) { title = `${state.playerName}, sei una stella! 🌟`; sub = "Hai praticamente fatto tutto giusto!"; fireworkCelebration(); playSound("perfect"); }
+      else if (pct >= 0.7) { title = `Bravo, ${state.playerName}! 🌿`; sub = "Continua così!"; playSound("fanfare"); }
+      else if (pct >= 0.5) { title = `Bel lavoro, ${state.playerName}! 🦊`; sub = "Stai imparando, continua!"; playSound("fanfare"); }
+      else { title = `Dai, ${state.playerName}! 🌱`; sub = "Ogni errore è un passo avanti!"; }
+
+      elements.resultsTitle.textContent = title;
+      elements.resultsSubtitle.textContent = sub;
+      elements.resultsStars.textContent = buildStars(state.score, TOTAL_QUESTIONS);
+      elements.resultsCopy.textContent = `Punteggio: ${state.score} / ${TOTAL_QUESTIONS}`;
+
+      renderSessionInsights();
+      showScreen("results");
+      speak(title);
+    }
+
+    function renderSessionInsights() {
+      if (!state.sessionResults.length) {
+        elements.sessionInsights.style.display = "none";
+        return;
+      }
+      // Find facts she got wrong this session
+      const wrongKeys = new Set();
+      state.sessionResults.forEach(r => { if (!r.correct) wrongKeys.add(r.key); });
+      if (wrongKeys.size === 0) {
+        elements.sessionInsights.style.display = "none";
+        return;
+      }
+      const items = [...wrongKeys].slice(0, 5).map(k => {
+        // key formats: "add:2+3" or "sub:14-8"
+        const [op, expr] = k.split(":");
+        if (op === "add") {
+          const [a, b] = expr.split("+").map(Number);
+          return `${a} + ${b} = ${a + b}`;
+        }
+        const [m, s] = expr.split("-").map(Number);
+        return `${m} − ${s} = ${m - s}`;
+      });
+      elements.sessionInsights.innerHTML = `<strong>Da rivedere:</strong><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul>`;
+      elements.sessionInsights.style.display = "block";
+    }
+
+    // ─── Mastery screen ───────────────────────────────────────
+    function renderMastery() {
+      const op = state.masteryViewOp;
+      const data = loadMastery();
+      const { count, total } = countMasteredForOp(op);
+      elements.masteryStats.textContent = `Padroneggi ${count} / ${total} ${op === "add" ? "addizioni" : "sottrazioni"}`;
+      elements.masteryProgressFill.style.width = `${(count / total) * 100}%`;
+
+      // Build grid: addition = 11x11 triangular (canonical lo+hi)
+      // For simplicity show as a square grid a(0..10) × b(0..10), but visually mark only canonical (a<=b) and reflect.
+      elements.masteryGrid.innerHTML = "";
+      if (op === "add") {
+        elements.masteryGrid.style.gridTemplateColumns = "repeat(11, 1fr)";
+        for (let a = 0; a <= 10; a++) {
+          for (let b = 0; b <= 10; b++) {
+            const cell = document.createElement("div");
+            cell.className = "mastery-cell";
+            const key = factKey("add", a, b);
+            const lvl = getMasteryLevel(data[key]);
+            cell.style.background = getMasteryColor(lvl);
+            cell.title = `${a} + ${b} = ${a + b}`;
+            cell.textContent = `${a}+${b}`;
+            elements.masteryGrid.appendChild(cell);
+          }
+        }
+      } else {
+        elements.masteryGrid.style.gridTemplateColumns = "repeat(11, 1fr)";
+        // For subtraction: minuend rows 0..20, subtrahend columns 0..10 (only valid where m >= s)
+        // To keep grid simple, show 21 rows × 11 cols (231 cells)
+        elements.masteryGrid.style.gridTemplateColumns = "repeat(11, 1fr)";
+        const facts = ALL_SUB_FACTS;
+        // Sort by minuend then subtrahend
+        facts.sort((a, b) => a.minuend - b.minuend || a.subtrahend - b.subtrahend);
+        facts.forEach(f => {
+          const cell = document.createElement("div");
+          cell.className = "mastery-cell";
+          const key = factKey("sub", f.minuend, f.subtrahend);
+          const lvl = getMasteryLevel(data[key]);
+          cell.style.background = getMasteryColor(lvl);
+          cell.title = `${f.minuend} − ${f.subtrahend} = ${f.answer}`;
+          cell.textContent = `${f.minuend}-${f.subtrahend}`;
+          elements.masteryGrid.appendChild(cell);
+        });
+      }
+    }
+
+    function resetMastery() {
+      if (!confirm("Sicuro di voler resettare tutti i progressi? Non si può annullare.")) return;
+      localStorage.removeItem(MASTERY_KEY);
+      renderMastery();
+    }
+
+    // ─── Wiring ───────────────────────────────────────────────
+    elements.playerName.addEventListener("input", e => {
+      state.playerName = e.target.value.trim() || "Amico";
+    });
+    elements.startBtn.addEventListener("click", () => {
+      if (!state.selectedLevel) return;
+      state.playerName = elements.playerName.value.trim() || "Amico";
+      startGame();
+    });
+    elements.exitBtn.addEventListener("click", () => {
+      clearTimer();
+      showScreen("welcome");
+    });
+    elements.playAgainBtn.addEventListener("click", () => startGame());
+    elements.changeLevelBtn.addEventListener("click", () => showScreen("welcome"));
+    elements.masteryBtn.addEventListener("click", () => { renderMastery(); showScreen("mastery"); });
+    elements.masteryBackBtn.addEventListener("click", () => showScreen("welcome"));
+    elements.masteryResetBtn.addEventListener("click", resetMastery);
+
+    [...elements.opPillGroup.children].forEach(b => b.addEventListener("click", () => selectOperationMode(b.dataset.op)));
+    [...elements.modePillGroup.children].forEach(b => b.addEventListener("click", () => selectInputMode(b.dataset.mode)));
+    [...elements.masteryOpPills.children].forEach(b => b.addEventListener("click", () => {
+      state.masteryViewOp = b.dataset.masteryOp;
+      [...elements.masteryOpPills.children].forEach(x => x.classList.toggle("selected", x === b));
+      renderMastery();
+    }));
+
+    elements.typeSubmitBtn.addEventListener("click", submitTypedAnswer);
+    elements.typeInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); submitTypedAnswer(); }
+    });
+    elements.typeInput.addEventListener("input", () => {
+      const cleaned = elements.typeInput.value.replace(/[^0-9]/g, "");
+      if (cleaned !== elements.typeInput.value) elements.typeInput.value = cleaned;
+    });
+
+    // Keyboard for choice mode
+    document.addEventListener("keydown", e => {
+      if (!screens.game.classList.contains("active")) return;
+      if (state.inputMode !== "choice") return;
+      if (state.choiceLocked) return;
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= 4) {
+        const btn = elements.choices.children[num - 1];
+        if (btn && !btn.disabled) { e.preventDefault(); btn.click(); }
+      }
+    });
+
+    // Restore preferences
+    try {
+      const savedName = localStorage.getItem("bdn_name");
+      if (savedName) { elements.playerName.value = savedName; state.playerName = savedName; }
+      const savedOp = localStorage.getItem("bdn_op_mode");
+      if (savedOp === "add" || savedOp === "sub" || savedOp === "mix") state.operationMode = savedOp;
+      const savedMode = localStorage.getItem("bdn_input_mode");
+      if (savedMode === "choice" || savedMode === "type") state.inputMode = savedMode;
+    } catch (_) {}
+
+    buildLevelButtons();
+    buildTimerButtons();
+    updateOpPillStyles();
+    updateModePillStyles();
+    createSparkles();
+
+    // Expose for testing
+    window._bdn = {
+      state, LEVELS, ALL_ADD_FACTS, ALL_SUB_FACTS,
+      selectLevel, selectTimer, selectOperationMode, selectInputMode,
+      makeQuestion, makeAdditionQuestion, makeSubtractionQuestion,
+      generateQuestions, buildQuestionFromPoolItem,
+      factKey, loadMastery, getMasteryLevel,
+      submitTypedAnswer
+    };
+  </script>
+  <script>if (!new URLSearchParams(location.search).has('test')) { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js'; document.head.appendChild(s); }</script>
+</body>
+</html>
