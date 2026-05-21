@@ -347,6 +347,61 @@
       gap: 10px;
     }
 
+    .choices.hidden { display: none; }
+
+    .type-area {
+      margin-top: 12px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .type-area.visible { display: flex; }
+    .type-input {
+      width: min(220px, 80%);
+      height: 78px;
+      font-size: 2.6rem;
+      font-weight: 800;
+      text-align: center;
+      border-radius: 18px;
+      border: 3px solid #ffd6ea;
+      background: linear-gradient(180deg, #ffffff, #fff5fb);
+      color: var(--ink);
+      letter-spacing: 0.05em;
+      box-shadow: 0 6px 18px rgba(255, 110, 178, 0.18);
+      outline: none;
+      transition: border-color 180ms ease, transform 180ms ease;
+      caret-color: var(--rose-500);
+    }
+    .type-input:focus { border-color: var(--rose-500); transform: scale(1.02); }
+    .type-input.correct { border-color: #65cc9a; background: linear-gradient(180deg, #d9ffe7, #baf7d2); color: #186a47; }
+    .type-input.wrong { border-color: #ff7da8; background: linear-gradient(180deg, #ffd9e6, #ffc6d9); color: #8c2349; animation: wobble 420ms ease; }
+    .type-submit-btn {
+      padding: 14px 38px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      border-radius: 22px;
+      border: none;
+      background: linear-gradient(180deg, #ff8fc6, #ff6eb2);
+      color: white;
+      box-shadow: 0 6px 18px rgba(255, 110, 178, 0.35);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+    .type-submit-btn:active { transform: translateY(1px); }
+    .type-submit-btn:disabled { opacity: 0.5; cursor: default; }
+
+    .mode-pill-group { display: inline-flex; gap: 0; border-radius: 22px; padding: 4px; background: #ffe5f2; border: 2px solid #ffd6ea; }
+    .mode-pill {
+      padding: 8px 16px; font-size: 0.95rem; font-weight: 700;
+      border: none; background: transparent; color: var(--ink);
+      border-radius: 18px; cursor: pointer; transition: all 180ms ease;
+    }
+    .mode-pill.selected {
+      background: linear-gradient(180deg, #ff8fc6, #ff6eb2);
+      color: white; box-shadow: 0 4px 12px rgba(255, 110, 178, 0.35);
+    }
+
     .choice-btn {
       padding: 15px 8px;
       font-size: 1.15rem;
@@ -665,6 +720,14 @@
           <label>Tempo per ogni domanda</label>
           <div class="table-buttons" id="timer-buttons"></div>
         </div>
+
+        <div class="table-row">
+          <label>Modalità risposta</label>
+          <div class="mode-pill-group" id="mode-pill-group">
+            <button type="button" class="mode-pill selected" data-mode="choice">🎯 Scelta multipla</button>
+            <button type="button" class="mode-pill" data-mode="type">⌨️ Sfida: scrivi tu</button>
+          </div>
+        </div>
       </div>
 
       <div class="btn-row">
@@ -692,6 +755,10 @@
       <div class="feedback" id="feedback"></div>
       <div class="strategy-hint" id="strategy-hint"></div>
       <div class="choices" id="choices"></div>
+      <div class="type-area" id="type-area">
+        <input id="type-input" class="type-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="Scrivi la risposta">
+        <button type="button" class="type-submit-btn" id="type-submit-btn">OK ✨</button>
+      </div>
 
       <div class="princess-wrap">
         <div class="princess" id="princess" aria-hidden="true">👸</div>
@@ -778,13 +845,19 @@
       masteryStats: document.getElementById("mastery-stats"),
       masteryBackBtn: document.getElementById("mastery-back-btn"),
       masteryResetBtn: document.getElementById("mastery-reset-btn"),
-      sessionInsights: document.getElementById("session-insights")
+      sessionInsights: document.getElementById("session-insights"),
+      modePillGroup: document.getElementById("mode-pill-group"),
+      typeArea: document.getElementById("type-area"),
+      typeInput: document.getElementById("type-input"),
+      typeSubmitBtn: document.getElementById("type-submit-btn")
     };
 
     const state = {
       playerName: "Principessa",
       selectedTables: new Set(),
       selectedTimer: DEFAULT_TIMER,
+      inputMode: "choice", // "choice" | "type"
+      typeAttempts: 0,
       score: 0,
       streak: 0,
       questionIndex: 0,
@@ -1617,6 +1690,7 @@
         multiplier: q.multiplier,
         answer
       };
+      state.typeAttempts = 0;
 
       elements.questionText.textContent = `${q.table} × ${q.multiplier} = ?`;
       elements.questionText.classList.remove("slide-in");
@@ -1626,9 +1700,77 @@
       hideStrategyHint();
       speak(`Quanto fa ${q.table} per ${q.multiplier}?`);
       updateHud();
-      renderChoices(options, answer);
-      unlockChoices();
+      if (state.inputMode === "type") {
+        showTypeArea();
+        resetTypeInput();
+        elements.typeInput.focus();
+      } else {
+        showChoicesArea();
+        renderChoices(options, answer);
+        unlockChoices();
+      }
       startTimer();
+    }
+
+    function showTypeArea() {
+      elements.choices.classList.add("hidden");
+      elements.typeArea.classList.add("visible");
+    }
+    function showChoicesArea() {
+      elements.choices.classList.remove("hidden");
+      elements.typeArea.classList.remove("visible");
+    }
+    function resetTypeInput() {
+      elements.typeInput.value = "";
+      elements.typeInput.disabled = false;
+      elements.typeInput.classList.remove("correct", "wrong");
+      elements.typeSubmitBtn.disabled = false;
+    }
+
+    function submitTypedAnswer() {
+      if (state.choiceLocked) return;
+      const raw = (elements.typeInput.value || "").trim();
+      if (raw === "") {
+        setFeedback("Scrivi un numero, poi tocca OK 🌸", "bad");
+        elements.typeInput.focus();
+        return;
+      }
+      const value = Number(raw);
+      if (!Number.isFinite(value)) {
+        setFeedback("Scrivi solo numeri 🌸", "bad");
+        elements.typeInput.focus();
+        return;
+      }
+      const answer = state.currentQuestion.answer;
+      const isCorrect = value === answer;
+      if (isCorrect) {
+        elements.typeInput.classList.add("correct");
+        elements.typeInput.disabled = true;
+        elements.typeSubmitBtn.disabled = true;
+        handleAnswer(value, false, null);
+        return;
+      }
+      // Wrong typed answer
+      state.typeAttempts += 1;
+      elements.typeInput.classList.remove("wrong");
+      void elements.typeInput.offsetWidth;
+      elements.typeInput.classList.add("wrong");
+      playSound("wrong");
+      if (state.typeAttempts === 1) {
+        // First miss: gentle nudge, let her retry
+        setFeedback("Quasi! Controlla bene e riprova 🌸", "bad");
+        speak("Quasi! Riprova.");
+        setTimeout(() => {
+          elements.typeInput.classList.remove("wrong");
+          elements.typeInput.value = "";
+          elements.typeInput.focus();
+        }, 600);
+        return;
+      }
+      // Second miss: reveal answer + hint, advance like normal wrong
+      elements.typeInput.disabled = true;
+      elements.typeSubmitBtn.disabled = true;
+      handleAnswer(value, false, null);
     }
 
     function nextQuestion() {
@@ -1806,12 +1948,49 @@
       if (saved) elements.playerName.value = saved;
     } catch (_) {}
 
+    // Restore input mode preference
+    try {
+      const savedMode = localStorage.getItem("pmq_input_mode");
+      if (savedMode === "type" || savedMode === "choice") {
+        state.inputMode = savedMode;
+      }
+    } catch (_) {}
+    function updateModePillStyles() {
+      [...elements.modePillGroup.children].forEach((b) => {
+        b.classList.toggle("selected", b.dataset.mode === state.inputMode);
+      });
+    }
+    function selectInputMode(mode) {
+      if (mode !== "choice" && mode !== "type") return;
+      state.inputMode = mode;
+      try { localStorage.setItem("pmq_input_mode", mode); } catch (_) {}
+      updateModePillStyles();
+    }
+    [...elements.modePillGroup.children].forEach((b) => {
+      b.addEventListener("click", () => selectInputMode(b.dataset.mode));
+    });
+    updateModePillStyles();
+
+    // Wire up typing input
+    elements.typeSubmitBtn.addEventListener("click", submitTypedAnswer);
+    elements.typeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submitTypedAnswer();
+      }
+    });
+    // Strip non-digits as user types (allow leading + for nothing, just digits)
+    elements.typeInput.addEventListener("input", () => {
+      const cleaned = elements.typeInput.value.replace(/[^0-9]/g, "");
+      if (cleaned !== elements.typeInput.value) elements.typeInput.value = cleaned;
+    });
+
     buildTableButtons();
     buildTimerButtons();
     createSparkles();
 
     // Expose for testing
-    window._pmq = { state, generateAdaptiveQuestions, isMultiTableMode, isAllTablesMode };
+    window._pmq = { state, generateAdaptiveQuestions, isMultiTableMode, isAllTablesMode, selectInputMode, submitTypedAnswer };
   </script>
 </body>
 </html>

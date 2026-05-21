@@ -58,6 +58,7 @@ test.describe("Princess Math Quest", () => {
     await page.evaluate(() => {
       localStorage.removeItem("pmq_mastery_v1");
       localStorage.removeItem("pmq_name");
+      localStorage.removeItem("pmq_input_mode");
     });
     await page.reload({ waitUntil: "networkidle" });
   });
@@ -477,5 +478,123 @@ test.describe("Princess Math Quest", () => {
     await page.waitForTimeout(200);
 
     expect(errors).toHaveLength(0);
+  });
+});
+
+// ─── Typing Mode ────────────────────────────────────────
+
+test.describe("Typing Mode", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(FILE_URL, { waitUntil: "networkidle" });
+    await page.evaluate(() => {
+      localStorage.removeItem("pmq_mastery_v1");
+      localStorage.removeItem("pmq_name");
+      localStorage.removeItem("pmq_input_mode");
+    });
+    await page.reload({ waitUntil: "networkidle" });
+  });
+
+  test("mode selector visible with two pills, choice selected by default", async ({ page }) => {
+    const pills = page.locator("#mode-pill-group .mode-pill");
+    await expect(pills).toHaveCount(2);
+    await expect(pills.nth(0)).toHaveAttribute("data-mode", "choice");
+    await expect(pills.nth(0)).toHaveClass(/selected/);
+    await expect(pills.nth(1)).toHaveAttribute("data-mode", "type");
+  });
+
+  test("selecting typing mode persists preference", async ({ page }) => {
+    await page.click('.mode-pill[data-mode="type"]');
+    await expect(page.locator('.mode-pill[data-mode="type"]')).toHaveClass(/selected/);
+    const saved = await page.evaluate(() => localStorage.getItem("pmq_input_mode"));
+    expect(saved).toBe("type");
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(page.locator('.mode-pill[data-mode="type"]')).toHaveClass(/selected/);
+  });
+
+  test("typing mode shows input + OK button, hides choice grid", async ({ page }) => {
+    await page.click('.mode-pill[data-mode="type"]');
+    await selectTable(page, 5);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
+    await expect(page.locator("#type-area")).toBeVisible();
+    await expect(page.locator("#type-input")).toBeVisible();
+    await expect(page.locator("#type-submit-btn")).toBeVisible();
+    await expect(page.locator("#choices")).toBeHidden();
+  });
+
+  test("correct typed answer advances + scores", async ({ page }) => {
+    await page.click('.mode-pill[data-mode="type"]');
+    await selectTable(page, 5);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    const ans = await currentAnswer(page);
+    await page.fill("#type-input", String(ans));
+    await page.click("#type-submit-btn");
+    await page.waitForTimeout(1000);
+    const score = await page.evaluate(() => (window as any)._pmq.state.score);
+    expect(score).toBe(1);
+  });
+
+  test("Enter key submits typed answer", async ({ page }) => {
+    await page.click('.mode-pill[data-mode="type"]');
+    await selectTable(page, 3);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    const ans = await currentAnswer(page);
+    await page.fill("#type-input", String(ans));
+    await page.locator("#type-input").press("Enter");
+    await page.waitForTimeout(1000);
+    const score = await page.evaluate(() => (window as any)._pmq.state.score);
+    expect(score).toBe(1);
+  });
+
+  test("first wrong typed answer lets user retry, second wrong advances", async ({ page }) => {
+    await page.click('.mode-pill[data-mode="type"]');
+    await selectTable(page, 5);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    const ans = await currentAnswer(page);
+    const initialIndex = await page.evaluate(() => (window as any)._pmq.state.questionIndex);
+    // First wrong
+    await page.fill("#type-input", String(ans + 1));
+    await page.click("#type-submit-btn");
+    await page.waitForTimeout(900);
+    // Still on same question, input re-enabled
+    const sameIndex = await page.evaluate(() => (window as any)._pmq.state.questionIndex);
+    expect(sameIndex).toBe(initialIndex);
+    await expect(page.locator("#type-input")).toBeEnabled();
+    const attempts = await page.evaluate(() => (window as any)._pmq.state.typeAttempts);
+    expect(attempts).toBe(1);
+    // Second wrong advances
+    await page.fill("#type-input", String(ans + 2));
+    await page.click("#type-submit-btn");
+    await page.waitForTimeout(1500);
+    const newIndex = await page.evaluate(() => (window as any)._pmq.state.questionIndex);
+    expect(newIndex).toBe(initialIndex + 1);
+  });
+
+  test("empty submit shows gentle prompt, does not advance", async ({ page }) => {
+    await page.click('.mode-pill[data-mode="type"]');
+    await selectTable(page, 2);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    await page.waitForFunction(() => (window as any)._pmq.state.currentQuestion !== null);
+    const initialIndex = await page.evaluate(() => (window as any)._pmq.state.questionIndex);
+    await page.click("#type-submit-btn");
+    await page.waitForTimeout(400);
+    await expect(page.locator("#feedback")).toContainText("Scrivi un numero");
+    const sameIndex = await page.evaluate(() => (window as any)._pmq.state.questionIndex);
+    expect(sameIndex).toBe(initialIndex);
+  });
+
+  test("non-digit input is stripped", async ({ page }) => {
+    await page.click('.mode-pill[data-mode="type"]');
+    await selectTable(page, 4);
+    await selectTimer(page, "∞");
+    await page.click("#start-btn");
+    await page.locator("#type-input").focus();
+    await page.keyboard.type("abc12xyz");
+    await expect(page.locator("#type-input")).toHaveValue("12");
   });
 });
